@@ -9,7 +9,7 @@
 <br><br>
 </p>
 <div align="center">
-  <img src=".github/images/pomodoro-cycle.png" width="800px">
+  <img src=".github/images/pomodoro-cycle.png">
 </div>
 
 **PomodoroCycle** is an uncomplicated, adjustable Pomodoro timer designed to offer a visually attractive and dependable method for monitoring productivity using the Pomodoro Technique.
