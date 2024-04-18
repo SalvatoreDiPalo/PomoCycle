@@ -1,0 +1,10 @@
+.slider {
+  height: 100px !important;
+  position: absolute !important;
+  top: 210px;
+  bottom: 0;
+  margin-left: auto;
+  margin-right: auto;
+  right: 105px;
+  left: 0;
+}
