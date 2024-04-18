@@ -1,6 +1,4 @@
 
----
-
 <p align="center">
 <h1 align="center">PomodoroCycle</h1>
 </p>
