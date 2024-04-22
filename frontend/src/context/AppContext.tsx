@@ -1,3 +1,4 @@
+import { ThemeProvider, createTheme } from "@mui/material";
 import React, { ReactNode, createContext, useEffect, useState } from "react";
 
 export interface AppState {
@@ -13,11 +14,37 @@ interface AppContextProps {
   incrementTime: (field: string, value: number) => void;
   resetTime: () => void;
   updateVolume: (value: number) => void;
+  colorMode: ThemeColorMode;
+}
+
+interface ThemeColorMode {
+  toggleColorMode: () => void;
 }
 
 export const AppContext = createContext<AppContextProps | null>(null);
 
 const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [mode, setMode] = React.useState<"light" | "dark">("light");
+
+  const colorMode = React.useMemo(
+    () => ({
+      toggleColorMode: () => {
+        setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
+      },
+    }),
+    []
+  );
+
+  const theme = React.useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+        },
+      }),
+    [mode]
+  );
+
   const [appState, setAppState] = useState<AppState>({
     ...DEFAULT_DATA,
     // Initialize other state properties here
@@ -54,9 +81,9 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   return (
     <AppContext.Provider
-      value={{ appState, incrementTime, resetTime, updateVolume }}
+      value={{ appState, incrementTime, resetTime, updateVolume, colorMode }}
     >
-      {children}
+      <ThemeProvider theme={theme}>{children}</ThemeProvider>
     </AppContext.Provider>
   );
 };
