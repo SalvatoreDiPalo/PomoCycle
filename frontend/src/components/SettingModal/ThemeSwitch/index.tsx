@@ -58,12 +58,12 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
 
 export default function ThemeSwitch() {
   const theme = useTheme();
-  const { colorMode } = useContext(AppContext)!;
+  const { updateTheme } = useContext(AppContext)!;
 
   const handleFullWidthChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    colorMode.toggleColorMode();
+    updateTheme();
   };
   return (
     <Box>

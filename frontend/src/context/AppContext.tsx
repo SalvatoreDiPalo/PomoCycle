@@ -7,6 +7,7 @@ export interface AppState {
   longBreakTime: number;
   rounds: number;
   volume: number;
+  theme: "light" | "dark";
 }
 
 interface AppContextProps {
@@ -14,41 +15,26 @@ interface AppContextProps {
   incrementTime: (field: string, value: number) => void;
   resetTime: () => void;
   updateVolume: (value: number) => void;
-  colorMode: ThemeColorMode;
-}
-
-interface ThemeColorMode {
-  toggleColorMode: () => void;
+  updateTheme: () => void;
 }
 
 export const AppContext = createContext<AppContextProps | null>(null);
 
 const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [mode, setMode] = React.useState<"light" | "dark">("light");
-
-  const colorMode = React.useMemo(
-    () => ({
-      toggleColorMode: () => {
-        setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-      },
-    }),
-    []
-  );
+  const [appState, setAppState] = useState<AppState>({
+    ...DEFAULT_DATA,
+    // Initialize other state properties here
+  });
 
   const theme = React.useMemo(
     () =>
       createTheme({
         palette: {
-          mode,
+          mode: appState.theme,
         },
       }),
-    [mode]
+    [appState.theme]
   );
-
-  const [appState, setAppState] = useState<AppState>({
-    ...DEFAULT_DATA,
-    // Initialize other state properties here
-  });
 
   useEffect(() => {
     const storedState = localStorage.getItem("appState");
@@ -79,9 +65,16 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     setAppState(DEFAULT_DATA);
   };
 
+  const updateTheme = () => {
+    setAppState((prevState) => ({
+      ...prevState,
+      theme: prevState.theme === "light" ? "dark" : "light",
+    }));
+  };
+
   return (
     <AppContext.Provider
-      value={{ appState, incrementTime, resetTime, updateVolume, colorMode }}
+      value={{ appState, incrementTime, resetTime, updateVolume, updateTheme }}
     >
       <ThemeProvider theme={theme}>{children}</ThemeProvider>
     </AppContext.Provider>
@@ -95,4 +88,5 @@ const DEFAULT_DATA: AppState = {
   longBreakTime: 15,
   rounds: 4,
   volume: 100,
+  theme: "light",
 };
