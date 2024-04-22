@@ -12,7 +12,6 @@ export default function ScheduleScreen() {
   const { appState, incrementTime, resetTime } = useContext(AppContext)!;
 
   const handleChange = (field: string, newValue: number | number[]) => {
-    console.log("HandleChange", field, newValue);
     if (typeof newValue === "number") {
       incrementTime(field, newValue);
     }

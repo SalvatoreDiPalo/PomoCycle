@@ -1,6 +1,6 @@
 import React, { ReactNode, createContext, useEffect, useState } from "react";
 
-interface AppState {
+export interface AppState {
   focusTime: number;
   shortBreakTime: number;
   longBreakTime: number;

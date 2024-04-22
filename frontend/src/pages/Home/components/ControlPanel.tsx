@@ -4,10 +4,14 @@ import PauseCircleIcon from "@mui/icons-material/PauseCircle";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-import { memo, useState } from "react";
+import { memo, useContext, useState } from "react";
 import "../style.css";
+import { AppContext } from "../../../context/AppContext";
+import { AddActivity } from "../../../service/activity-service";
+import { Operation } from "../../../data/Operation";
 
 interface ControlPanelProps {
+  sessionId: number;
   started: boolean;
   isRunning: boolean;
   volume: number;
@@ -15,11 +19,12 @@ interface ControlPanelProps {
   resume: () => void;
   pause: () => void;
   onSkip: () => void;
-  updateVolume: (value: number) => void;
+  audio: HTMLAudioElement;
 }
 
 const ControlPanel = memo(
   ({
+    sessionId,
     started,
     isRunning,
     volume,
@@ -27,10 +32,11 @@ const ControlPanel = memo(
     resume,
     pause,
     onSkip,
-    updateVolume,
+    audio,
   }: ControlPanelProps) => {
     const [isAudioSliderVisible, setAudioSliderVisible] =
       useState<boolean>(false);
+    const { updateVolume } = useContext(AppContext)!;
 
     const handleToggleVolume = () => {
       updateVolume(volume === 0 ? 100 : 0);
@@ -42,6 +48,19 @@ const ControlPanel = memo(
 
     const handleMouseLeave = () => {
       setAudioSliderVisible(false);
+    };
+
+    const onPause = () => {
+      AddActivity(sessionId, Operation.PAUSE, pause);
+    };
+
+    const onResume = () => {
+      AddActivity(sessionId, Operation.PAUSE, resume);
+    };
+
+    const handleUpdateVolume = (value: number) => {
+      audio.volume = value / 100;
+      updateVolume(value);
     };
 
     return (
@@ -68,7 +87,7 @@ const ControlPanel = memo(
               aria-label="Volume"
               value={volume}
               onChange={(event: Event, newValue: number | number[]) =>
-                updateVolume(newValue as number)
+                handleUpdateVolume(newValue as number)
               }
               max={100}
               min={0}
@@ -79,12 +98,12 @@ const ControlPanel = memo(
         {!isRunning ? (
           <IconButton
             aria-label="play"
-            onClick={() => (!started ? startTimer() : resume())}
+            onClick={() => (!started ? startTimer() : onResume())}
           >
             <PlayCircleIcon sx={{ fontSize: 48 }} />
           </IconButton>
         ) : (
-          <IconButton aria-label="pause" onClick={pause}>
+          <IconButton aria-label="pause" onClick={onPause}>
             <PauseCircleIcon sx={{ fontSize: 48 }} />
           </IconButton>
         )}

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { Box, Stack } from "@mui/material";
 import { useTimer } from "react-timer-hook";
 import { AppContext } from "../../context/AppContext";
@@ -6,37 +6,16 @@ import CircularWithValueLabel from "../../components/CircularWithLabel";
 import ControlPanel from "./components/ControlPanel";
 import { TimerLabel } from "../../data/TimerLabel";
 import RoundCounter from "./components/RoundCounter";
-import ringer from "../../assets/66951_634166-lq.mp3";
-import {
-  StartPomo,
-  AddActivityFromPomo,
-  UpdatePomoSecondsLeft,
-} from "../../../wailsjs/go/main/App";
+import { StartPomo, UpdatePomoSecondsLeft } from "../../../wailsjs/go/main/App";
+import { LogDebug, LogError } from "../../../wailsjs/runtime/runtime";
 import { Operation } from "../../data/Operation";
-
-const TIMEOUT: number = 1500;
-
-const handleActivity = async (
-  sessionId: number,
-  operation: number,
-  onSuccess: () => void
-) => {
-  try {
-    const activityId = await AddActivityFromPomo({
-      operation,
-      session_id: sessionId,
-      timestamp: new Date().getTime(),
-    });
-    console.log("Activity id", activityId);
-    onSuccess();
-  } catch (err) {
-    console.error("Error while adding activity", err);
-  }
-};
+import { AddActivity } from "../../service/activity-service";
+import ringer from "../../assets/66951_634166-lq.mp3";
+import { TIMEOUT } from "../../util/Constants";
+import { calculateTimeAndLabel } from "../../util/Utils";
 
 export default function HomeScreen() {
-  const { appState, updateVolume } = useContext(AppContext)!;
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const { appState } = useContext(AppContext)!;
   const [historyData, setHistoryData] = useState({
     sessionId: 0,
     isStarted: false,
@@ -46,11 +25,8 @@ export default function HomeScreen() {
     currentLabel: TimerLabel.FOCUS_TIME,
   });
 
-  useEffect(() => {
-    const audioElement = new Audio(ringer);
-    audioElement.volume = appState.volume / 100;
-    setAudio(audioElement);
-  }, []);
+  const audio = new Audio(ringer);
+  audio.volume = appState.volume / 100;
 
   const initDateTime = new Date();
   initDateTime.setSeconds(
@@ -58,34 +34,30 @@ export default function HomeScreen() {
   );
 
   const onExpire = () => {
-    handleActivity(historyData.sessionId, Operation.FINISH, () => {});
-    UpdatePomoSecondsLeft({
-      id: historyData.sessionId,
-      seconds_left: totalSeconds,
-    }).catch((err) => console.error("Error while updating session", err));
-    audio?.play();
-    const currentRound = historyData.currentRound + 1;
-    if (currentRound > appState.rounds * 2) {
+    LogDebug(
+      `Expired or skipped pomo [id=${historyData.sessionId}]. Seconds left: ${totalSeconds}`
+    );
+    AddActivity(historyData.sessionId, Operation.FINISH, () =>
+      UpdatePomoSecondsLeft({
+        id: historyData.sessionId,
+        seconds_left: totalSeconds,
+      }).catch((err) =>
+        LogError(`Error while updating session ${historyData.sessionId}`)
+      )
+    );
+    audio.currentTime = 0;
+    audio.play();
+    const nextRound = historyData.currentRound + 1;
+    if (nextRound > appState.rounds * 2) {
       return resetTimer();
     }
-    const isEvenRound = currentRound % 2 === 0;
-
-    let time = appState.focusTime;
-    let label = TimerLabel.FOCUS_TIME;
-
-    if (currentRound === appState.rounds * 2) {
-      time = appState.longBreakTime;
-      label = TimerLabel.LONG_BREAK;
-    } else if (isEvenRound) {
-      time = appState.shortBreakTime;
-      label = TimerLabel.SHORT_BREAK;
-    }
+    const { time, label } = calculateTimeAndLabel(nextRound, appState);
     updateTime(
       time,
       label,
       true,
-      currentRound,
-      isEvenRound
+      nextRound,
+      nextRound % 2 === 0
         ? historyData.currentFocussedTime
         : historyData.currentFocussedTime + 1
     );
@@ -94,19 +66,6 @@ export default function HomeScreen() {
   const onSkip = () => {
     pause();
     onExpire();
-  };
-
-  const onPause = () => {
-    handleActivity(historyData.sessionId, Operation.PAUSE, pause);
-  };
-
-  const onResume = () => {
-    handleActivity(historyData.sessionId, Operation.PAUSE, resume);
-  };
-
-  const handleUpdateVolume = (value: number) => {
-    audio!.volume = value / 100;
-    updateVolume(value);
   };
 
   const resetTimer = () => {
@@ -132,7 +91,6 @@ export default function HomeScreen() {
   });
 
   const startTimer = () => {
-    //TODO add enum for stages
     StartPomo({
       seconds_left: historyData.currentSelectedTimer * 60,
       stage: historyData.currentLabel,
@@ -153,7 +111,7 @@ export default function HomeScreen() {
     time: number,
     label: TimerLabel,
     isStarted: boolean,
-    currentRound: number,
+    nextRound: number,
     currentFocussedTime: number
   ) => {
     setTimeout(() => {
@@ -167,10 +125,12 @@ export default function HomeScreen() {
         total_seconds: time * 60,
       })
         .then((sessionId) => {
+          //TODO add dissolve audio
+          audio.pause();
           setHistoryData({
             sessionId,
             isStarted,
-            currentRound,
+            currentRound: nextRound,
             currentFocussedTime,
             currentSelectedTimer: time,
             currentLabel: label,
@@ -192,14 +152,15 @@ export default function HomeScreen() {
         />
 
         <ControlPanel
+          sessionId={historyData.sessionId}
           started={historyData.isStarted}
           isRunning={isRunning}
           volume={appState.volume}
+          audio={audio}
           startTimer={startTimer}
-          resume={onResume}
-          pause={onPause}
+          resume={resume}
+          pause={pause}
           onSkip={onSkip}
-          updateVolume={handleUpdateVolume}
         />
       </Box>
       <RoundCounter
