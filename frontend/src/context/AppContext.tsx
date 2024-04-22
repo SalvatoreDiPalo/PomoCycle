@@ -1,5 +1,6 @@
 import { ThemeProvider, createTheme } from "@mui/material";
 import React, { ReactNode, createContext, useEffect, useState } from "react";
+import { AlarmSound } from "../data/AlarmSound";
 
 export interface AppState {
   focusTime: number;
@@ -8,6 +9,7 @@ export interface AppState {
   rounds: number;
   volume: number;
   theme: "light" | "dark";
+  alarmSound: AlarmSound;
 }
 
 interface AppContextProps {
@@ -16,6 +18,7 @@ interface AppContextProps {
   resetTime: () => void;
   updateVolume: (value: number) => void;
   updateTheme: () => void;
+  changeAlarmSound: (sound: AlarmSound) => void;
 }
 
 export const AppContext = createContext<AppContextProps | null>(null);
@@ -72,9 +75,23 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }));
   };
 
+  const changeAlarmSound = (sound: AlarmSound) => {
+    setAppState((prevState) => ({
+      ...prevState,
+      alarmSound: sound,
+    }));
+  };
+
   return (
     <AppContext.Provider
-      value={{ appState, incrementTime, resetTime, updateVolume, updateTheme }}
+      value={{
+        appState,
+        incrementTime,
+        resetTime,
+        updateVolume,
+        updateTheme,
+        changeAlarmSound,
+      }}
     >
       <ThemeProvider theme={theme}>{children}</ThemeProvider>
     </AppContext.Provider>
@@ -89,4 +106,5 @@ const DEFAULT_DATA: AppState = {
   rounds: 4,
   volume: 100,
   theme: "light",
+  alarmSound: AlarmSound.DOUBLE_BELL,
 };

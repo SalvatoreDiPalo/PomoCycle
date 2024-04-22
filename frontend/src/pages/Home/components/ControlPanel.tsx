@@ -19,7 +19,7 @@ interface ControlPanelProps {
   resume: () => void;
   pause: () => void;
   onSkip: () => void;
-  audio: HTMLAudioElement;
+  audio: HTMLAudioElement | undefined;
 }
 
 const ControlPanel = memo(
@@ -59,7 +59,10 @@ const ControlPanel = memo(
     };
 
     const handleUpdateVolume = (value: number) => {
-      audio.volume = value / 100;
+      if (audio) {
+        audio.volume = value / 100;
+      }
+
       updateVolume(value);
     };
 

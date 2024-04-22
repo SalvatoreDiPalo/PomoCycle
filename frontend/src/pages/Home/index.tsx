@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Box, Stack } from "@mui/material";
 import { useTimer } from "react-timer-hook";
 import { AppContext } from "../../context/AppContext";
@@ -10,8 +10,7 @@ import { StartPomo, UpdatePomoSecondsLeft } from "../../../wailsjs/go/main/App";
 import { LogDebug, LogError } from "../../../wailsjs/runtime/runtime";
 import { Operation } from "../../data/Operation";
 import { AddActivity } from "../../service/activity-service";
-import ringer from "../../assets/66951_634166-lq.mp3";
-import { TIMEOUT } from "../../util/Constants";
+import { TIMEOUT, audioPaths } from "../../util/Constants";
 import { calculateTimeAndLabel } from "../../util/Utils";
 
 export default function HomeScreen() {
@@ -25,8 +24,12 @@ export default function HomeScreen() {
     currentLabel: TimerLabel.FOCUS_TIME,
   });
 
-  const audio = new Audio(ringer);
-  audio.volume = appState.volume / 100;
+  const [audio, setAudio] = useState<HTMLAudioElement>();
+  useEffect(() => {
+    const audio = new Audio(audioPaths[appState.alarmSound]);
+    audio.volume = appState.volume / 100;
+    setAudio(audio);
+  }, [appState]);
 
   const initDateTime = new Date();
   initDateTime.setSeconds(
@@ -45,8 +48,10 @@ export default function HomeScreen() {
         LogError(`Error while updating session ${historyData.sessionId}`)
       )
     );
-    audio.currentTime = 0;
-    audio.play();
+    if (audio) {
+      audio.currentTime = 0;
+    }
+    audio?.play();
     const nextRound = historyData.currentRound + 1;
     if (nextRound > appState.rounds * 2) {
       return resetTimer();
@@ -126,7 +131,7 @@ export default function HomeScreen() {
       })
         .then((sessionId) => {
           //TODO add dissolve audio
-          audio.pause();
+          audio?.pause();
           setHistoryData({
             sessionId,
             isStarted,

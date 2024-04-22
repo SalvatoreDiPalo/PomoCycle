@@ -7,13 +7,15 @@ import {
   SelectChangeEvent,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { AlarmSound } from "../../../data/AlarmSound";
+import { AppContext } from "../../../context/AppContext";
 
 export default function Sound() {
-  const [age, setAge] = useState("");
+  const { appState, changeAlarmSound } = useContext(AppContext)!;
 
   const handleChange = (event: SelectChangeEvent) => {
-    setAge(event.target.value as string);
+    changeAlarmSound(event.target.value as AlarmSound);
   };
   return (
     <Box>
@@ -38,12 +40,14 @@ export default function Sound() {
           <Select
             labelId="sound-select-label"
             id="sound-select"
-            value={age}
+            value={appState.alarmSound}
             onChange={handleChange}
           >
-            <MenuItem value={10}>Ten</MenuItem>
-            <MenuItem value={20}>Twenty</MenuItem>
-            <MenuItem value={30}>Thirty</MenuItem>
+            {Object.values(AlarmSound).map((alarm) => (
+              <MenuItem key={alarm} value={alarm}>
+                {alarm}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>
