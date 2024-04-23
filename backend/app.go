@@ -107,6 +107,11 @@ func (a *App) GetPomos(stage string) ([]model.SessionDbRow, error) {
 	return s.GetSessionsByStage(a.db, stage)
 }
 
+func (a *App) GetPomoWeekReport(date string) ([]model.SessionDbRow, error) {
+	s := model.Session{}
+	return s.GetSessionWeekReport(a.db, date)
+}
+
 func (a *App) AddActivityFromPomo(addActivity model.Activity) (int64, error) {
 	s := model.SessionDbRow{ID: addActivity.IdSession}
 	_, err := s.GetSessionByID(a.db, addActivity.IdSession)

@@ -71,6 +71,41 @@ func (a *Session) UpdateSecondsLeft(db *sql.DB, ID int64, seconds_left int) (boo
 	return rowsAffected > 0, nil
 }
 
+func (a *Session) GetSessionWeekReport(db *sql.DB, date string) ([]SessionDbRow, error) {
+	var sessions []SessionDbRow
+	rows, err := db.QueryContext(
+		context.Background(),
+		`WITH date_stage AS (
+			SELECT *
+			FROM (SELECT DISTINCT date("timestamp") as date FROM sessions),
+				 (values ('FOCUS TIME'),('SHORT BREAK'),('LONG BREAK'))
+		  ),
+		  default_values AS (
+			SELECT id, stage, total_seconds, "timestamp", seconds_left
+			FROM sessions
+			UNION ALL
+			SELECT -1, column1, 0, date, 0
+			FROM date_stage
+		  )
+		  SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0)
+		  FROM default_values
+		  WHERE strftime('%W', "timestamp") = strftime('%W', ?)
+		  GROUP BY date("timestamp"), stage;`, date,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var session SessionDbRow
+		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft); err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, session)
+	}
+	return sessions, err
+}
+
 func (a *Session) GetSessionByID(db *sql.DB, id int64) (SessionDbRow, error) {
 	var session SessionDbRow
 	row := db.QueryRowContext(

@@ -5,6 +5,8 @@ import {backend} from '../models';
 
 export function AddActivityFromPomo(arg1:model.Activity):Promise<number>;
 
+export function GetPomoWeekReport(arg1:string):Promise<Array<model.SessionDbRow>>;
+
 export function GetPomos(arg1:string):Promise<Array<model.SessionDbRow>>;
 
 export function Greet(arg1:string):Promise<string>;
