@@ -6,7 +6,10 @@ import CircularWithValueLabel from "../../components/CircularWithLabel";
 import ControlPanel from "./components/ControlPanel";
 import { TimerLabel } from "../../data/TimerLabel";
 import RoundCounter from "./components/RoundCounter";
-import { StartPomo, UpdatePomoSecondsLeft } from "../../../wailsjs/go/main/App";
+import {
+  StartPomo,
+  UpdatePomoSecondsLeft,
+} from "../../../wailsjs/go/backend/App";
 import { LogDebug, LogError } from "../../../wailsjs/runtime/runtime";
 import { Operation } from "../../data/Operation";
 import { AddActivity } from "../../service/activity-service";

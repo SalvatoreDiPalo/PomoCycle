@@ -1,4 +1,4 @@
-import { AddActivityFromPomo } from "../../wailsjs/go/main/App";
+import { AddActivityFromPomo } from "../../wailsjs/go/backend/App";
 import { LogDebug, LogError } from "../../wailsjs/runtime/runtime";
 
 export const AddActivity = async (
