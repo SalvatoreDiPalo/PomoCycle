@@ -13,17 +13,3 @@ body {
 #root {
   height: 100%;
 }
-
-.report-box {
-  height: 72px;
-  padding: 8px;
-}
-
-.report-box p {
-  text-align: right;
-}
-
-.report-box-header {
-  display: flex;
-  justify-content: space-between;
-}

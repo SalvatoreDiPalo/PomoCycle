@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"pomodoro/backend/model"
 
 	"github.com/adrg/xdg"
 	_ "modernc.org/sqlite"
@@ -16,32 +17,17 @@ type App struct {
 	dbPath string
 }
 
-type Session struct {
-	Stage        string `json:"stage"`
-	TotalSeconds int    `json:"total_seconds"`
-	Timestamp    int    `json:"timestamp"`
-	SecondsLeft  int    `json:"seconds_left"`
-}
-
 type UpdateSessionSecondsLeft struct {
 	ID          int64 `json:"id"`
 	SecondsLeft int   `json:"seconds_left"`
 }
 
-type SessionDbRow struct {
-	ID int64
-	Session
-}
-
-type Activity struct {
-	Operation int   `json:"operation"`
-	Timestamp int   `json:"timestamp"`
-	IdSession int64 `json:"session_id"`
-}
-
-type AcitivityDbRow struct {
-	ID int64
-	Activity
+type Pomo struct {
+	ID           int64  `json:"id"`
+	Stage        string `json:"stage"`
+	TotalSeconds int    `json:"total_seconds"`
+	Timestamp    string `json:"timestamp"`
+	SecondsLeft  int    `json:"seconds_left"`
 }
 
 type Operation int
@@ -76,13 +62,13 @@ func (a *App) Startup(ctx context.Context) {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			stage TEXT NOT NULL,
 			total_seconds INTEGER NOT NULL,
-			"timestamp" INTEGER NOT NULL,
+			"timestamp" TEXT NOT NULL,
 			seconds_left INTEGER
 		);
 		CREATE TABLE if not exists activities (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			operation INTEGER NOT NULL,
-			"timestamp" INTEGER NOT NULL,
+			"timestamp" TEXT NOT NULL,
 			id_session INTEGER NOT NULL,
 			CONSTRAINT activities_FK FOREIGN KEY (id_session) REFERENCES sessions(id)
 		);`,
@@ -96,93 +82,51 @@ func (a *App) shutdown(ctx context.Context) {
 	a.db.Close()
 }
 
-func (a *App) addSession(session *Session) (int64, error) {
-	result, err := a.db.ExecContext(
-		context.Background(),
-		`INSERT INTO sessions (stage, total_seconds, "timestamp", seconds_left) VALUES(?, ?, ?, ?);`, session.Stage, session.TotalSeconds, session.Timestamp, session.SecondsLeft,
-	)
-	if err != nil {
-		println("Error adding session", session, err)
-		return 0, err
+func (a *App) StartPomo(addPomo model.Session) (int64, error) {
+	s := model.Session{
+		Stage:        addPomo.Stage,
+		TotalSeconds: addPomo.TotalSeconds,
+		Timestamp:    addPomo.Timestamp,
+		SecondsLeft:  addPomo.SecondsLeft,
 	}
-	id, err := result.LastInsertId()
-	if err != nil {
-		println("Error getting last insterted id", err)
-		return 0, err
-	}
-	return id, nil
-}
-
-func (a *App) updateSecondsLeft(ID int64, seconds_left int) (bool, error) {
-	result, err := a.db.ExecContext(
-		context.Background(),
-		`UPDATE sessions SET seconds_left=? WHERE id=?;`, seconds_left, ID,
-	)
-	if err != nil {
-		println("Error updating seconds left", ID, err)
-		return false, err
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		println("Error getting last insterted id", err)
-		return false, err
-	}
-	return rowsAffected > 0, nil
-}
-
-func (a *App) getSessionByID(id int64) (SessionDbRow, error) {
-	var session SessionDbRow
-	row := a.db.QueryRowContext(
-		context.Background(),
-		`SELECT * FROM sessions WHERE id=?`, id,
-	)
-	err := row.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft)
-	if err != nil {
-		return session, err
-	}
-	return session, nil
-}
-
-func (a *App) addActivity(activity *Activity) (int64, error) {
-	result, err := a.db.ExecContext(
-		context.Background(),
-		`INSERT INTO activities (operation, "timestamp", id_session) VALUES(?, ?, ?);`, activity.Operation, activity.Timestamp, activity.IdSession,
-	)
-	if err != nil {
-		println("Error adding activity", activity, err)
-		return 0, err
-	}
-	id, err := result.LastInsertId()
+	sessionId, err := s.AddSession(a.db, &s)
 	if err != nil {
 		return 0, err
 	}
-	return id, nil
-}
-
-func (a *App) StartPomo(session Session) (int64, error) {
-	sessionId, err := a.addSession(&session)
-	if err != nil {
-		return 0, err
+	activity := model.Activity{
+		Operation: int(START),
+		Timestamp: s.Timestamp,
+		IdSession: sessionId,
 	}
-	a.addActivity(&Activity{
-		int(START),
-		session.Timestamp,
-		sessionId,
-	})
+	activity.AddActivity(a.db, &activity)
 	return sessionId, err
 }
 
-func (a *App) AddActivityFromPomo(activity Activity) (int64, error) {
-	_, err := a.getSessionByID(activity.IdSession)
+func (a *App) GetPomos(stage string) ([]model.SessionDbRow, error) {
+	s := model.Session{}
+	return s.GetSessionsByStage(a.db, stage)
+}
+
+func (a *App) AddActivityFromPomo(addActivity model.Activity) (int64, error) {
+	s := model.SessionDbRow{ID: addActivity.IdSession}
+	_, err := s.GetSessionByID(a.db, addActivity.IdSession)
 	if err != nil {
-		return activity.IdSession, err
+		return addActivity.IdSession, err
 	}
-	activityId, err := a.addActivity(&activity)
+	activity := model.Activity{
+		Operation: addActivity.Operation,
+		Timestamp: addActivity.Timestamp,
+		IdSession: addActivity.IdSession,
+	}
+	activityId, err := activity.AddActivity(a.db, &activity)
 	return activityId, err
 }
 
-func (a *App) UpdatePomoSecondsLeft(session UpdateSessionSecondsLeft) (bool, error) {
-	return a.updateSecondsLeft(session.ID, session.SecondsLeft)
+func (a *App) UpdatePomoSecondsLeft(updateSessionSecondsLeft UpdateSessionSecondsLeft) (bool, error) {
+	s := model.Session{
+		SecondsLeft: updateSessionSecondsLeft.SecondsLeft,
+	}
+	return s.UpdateSecondsLeft(a.db, updateSessionSecondsLeft.ID, updateSessionSecondsLeft.SecondsLeft)
 }
 
 // Greet returns a greeting for the given name

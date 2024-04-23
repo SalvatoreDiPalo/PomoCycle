@@ -76,6 +76,19 @@ export default function HomeScreen() {
     onExpire();
   };
 
+  const onPause = () => {
+    UpdatePomoSecondsLeft({
+      id: historyData.sessionId,
+      seconds_left: totalSeconds,
+    })
+      .catch((err) =>
+        LogError(
+          `Pause -> Error while updating session ${historyData.sessionId}`
+        )
+      )
+      .finally(() => pause());
+  };
+
   const resetTimer = () => {
     pause();
     updateTime(appState.focusTime, TimerLabel.FOCUS_TIME, false, 1, 1);
@@ -102,7 +115,7 @@ export default function HomeScreen() {
     StartPomo({
       seconds_left: historyData.currentSelectedTimer * 60,
       stage: historyData.currentLabel,
-      timestamp: new Date().getTime(),
+      timestamp: new Date().toISOString(),
       total_seconds: historyData.currentSelectedTimer * 60,
     })
       .then((sessionId) => {
@@ -129,7 +142,7 @@ export default function HomeScreen() {
       StartPomo({
         seconds_left: time * 60,
         stage: label,
-        timestamp: new Date().getTime(),
+        timestamp: new Date().toISOString(),
         total_seconds: time * 60,
       })
         .then((sessionId) => {
@@ -167,7 +180,7 @@ export default function HomeScreen() {
           audio={audio}
           startTimer={startTimer}
           resume={resume}
-          pause={pause}
+          pause={onPause}
           onSkip={onSkip}
         />
       </Box>

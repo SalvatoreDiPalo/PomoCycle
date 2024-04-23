@@ -10,7 +10,7 @@ export const AddActivity = async (
     const activityId = await AddActivityFromPomo({
       operation,
       session_id: sessionId,
-      timestamp: new Date().getTime(),
+      timestamp: new Date().toISOString(),
     });
     console.log("Activity id", activityId);
     LogDebug("Added activity");

@@ -1,8 +1,27 @@
 export namespace backend {
 	
+	export class UpdateSessionSecondsLeft {
+	    id: number;
+	    seconds_left: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateSessionSecondsLeft(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.seconds_left = source["seconds_left"];
+	    }
+	}
+
+}
+
+export namespace model {
+	
 	export class Activity {
 	    operation: number;
-	    timestamp: number;
+	    timestamp: string;
 	    session_id: number;
 	
 	    static createFrom(source: any = {}) {
@@ -19,7 +38,7 @@ export namespace backend {
 	export class Session {
 	    stage: string;
 	    total_seconds: number;
-	    timestamp: number;
+	    timestamp: string;
 	    seconds_left: number;
 	
 	    static createFrom(source: any = {}) {
@@ -34,17 +53,21 @@ export namespace backend {
 	        this.seconds_left = source["seconds_left"];
 	    }
 	}
-	export class UpdateSessionSecondsLeft {
-	    id: number;
+	export class SessionDbRow {
+	    stage: string;
+	    total_seconds: number;
+	    timestamp: string;
 	    seconds_left: number;
 	
 	    static createFrom(source: any = {}) {
-	        return new UpdateSessionSecondsLeft(source);
+	        return new SessionDbRow(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.id = source["id"];
+	        this.stage = source["stage"];
+	        this.total_seconds = source["total_seconds"];
+	        this.timestamp = source["timestamp"];
 	        this.seconds_left = source["seconds_left"];
 	    }
 	}
