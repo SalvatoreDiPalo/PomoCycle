@@ -112,6 +112,16 @@ func (a *App) GetPomoWeekReport(date string) ([]model.SessionDbRow, error) {
 	return s.GetSessionWeekReport(a.db, date)
 }
 
+func (a *App) GetPomoMonthReport(date string) ([]model.SessionDbRowMonth, error) {
+	s := model.Session{}
+	return s.GetSessionMonthReport(a.db, date)
+}
+
+func (a *App) GetPomoYearReport(date string) ([]model.SessionDbRowYear, error) {
+	s := model.Session{}
+	return s.GetSessionYearReport(a.db, date)
+}
+
 func (a *App) AddActivityFromPomo(addActivity model.Activity) (int64, error) {
 	s := model.SessionDbRow{ID: addActivity.IdSession}
 	_, err := s.GetSessionByID(a.db, addActivity.IdSession)

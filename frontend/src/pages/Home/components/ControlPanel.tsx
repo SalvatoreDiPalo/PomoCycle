@@ -7,8 +7,8 @@ import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import { memo, useContext, useState } from "react";
 import "../style.css";
 import { AppContext } from "../../../context/AppContext";
-import { AddActivity } from "../../../service/activity-service";
 import { Operation } from "../../../data/Operation";
+import { AddActivity } from "../../../util/Utils";
 
 interface ControlPanelProps {
   sessionId: number;

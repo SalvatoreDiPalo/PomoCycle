@@ -71,6 +71,46 @@ export namespace model {
 	        this.seconds_left = source["seconds_left"];
 	    }
 	}
+	export class SessionDbRowMonth {
+	    week: number;
+	    stage: string;
+	    total_seconds: number;
+	    timestamp: string;
+	    seconds_left: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new SessionDbRowMonth(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.week = source["week"];
+	        this.stage = source["stage"];
+	        this.total_seconds = source["total_seconds"];
+	        this.timestamp = source["timestamp"];
+	        this.seconds_left = source["seconds_left"];
+	    }
+	}
+	export class SessionDbRowYear {
+	    month: number;
+	    stage: string;
+	    total_seconds: number;
+	    timestamp: string;
+	    seconds_left: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new SessionDbRowYear(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.month = source["month"];
+	        this.stage = source["stage"];
+	        this.total_seconds = source["total_seconds"];
+	        this.timestamp = source["timestamp"];
+	        this.seconds_left = source["seconds_left"];
+	    }
+	}
 
 }
 

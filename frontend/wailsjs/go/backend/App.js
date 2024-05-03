@@ -6,8 +6,16 @@ export function AddActivityFromPomo(arg1) {
   return window['go']['backend']['App']['AddActivityFromPomo'](arg1);
 }
 
+export function GetPomoMonthReport(arg1) {
+  return window['go']['backend']['App']['GetPomoMonthReport'](arg1);
+}
+
 export function GetPomoWeekReport(arg1) {
   return window['go']['backend']['App']['GetPomoWeekReport'](arg1);
+}
+
+export function GetPomoYearReport(arg1) {
+  return window['go']['backend']['App']['GetPomoYearReport'](arg1);
 }
 
 export function GetPomos(arg1) {

@@ -12,9 +12,9 @@ import {
 } from "../../../wailsjs/go/backend/App";
 import { LogDebug, LogError } from "../../../wailsjs/runtime/runtime";
 import { Operation } from "../../data/Operation";
-import { AddActivity } from "../../service/activity-service";
 import { TIMEOUT, audioPaths } from "../../util/Constants";
-import { calculateTimeAndLabel } from "../../util/Utils";
+import { AddActivity, calculateTimeAndLabel } from "../../util/Utils";
+import { addSeconds, formatISO } from "date-fns";
 
 export default function HomeScreen() {
   const { appState } = useContext(AppContext)!;
@@ -34,9 +34,9 @@ export default function HomeScreen() {
     setAudio(audio);
   }, [appState]);
 
-  const initDateTime = new Date();
-  initDateTime.setSeconds(
-    initDateTime.getSeconds() + historyData.currentSelectedTimer * 60
+  const initDateTime = addSeconds(
+    new Date(),
+    historyData.currentSelectedTimer * 60
   );
 
   const onExpire = () => {
@@ -115,7 +115,7 @@ export default function HomeScreen() {
     StartPomo({
       seconds_left: historyData.currentSelectedTimer * 60,
       stage: historyData.currentLabel,
-      timestamp: new Date().toISOString(),
+      timestamp: formatISO(new Date()),
       total_seconds: historyData.currentSelectedTimer * 60,
     })
       .then((sessionId) => {
@@ -142,7 +142,7 @@ export default function HomeScreen() {
       StartPomo({
         seconds_left: time * 60,
         stage: label,
-        timestamp: new Date().toISOString(),
+        timestamp: formatISO(new Date()),
         total_seconds: time * 60,
       })
         .then((sessionId) => {

@@ -1,40 +1,27 @@
 import {
   Box,
   BoxProps,
-  Button,
-  ButtonGroup,
   Dialog,
   DialogContent,
   DialogTitle,
   Divider,
-  FormControl,
   Grid,
   IconButton,
-  InputLabel,
-  MenuItem,
   Paper,
   PaperProps,
-  Select,
-  SelectChangeEvent,
   Stack,
   Typography,
   styled,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ScheduleIcon from "@mui/icons-material/Schedule";
-import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
-import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import { useEffect, useState } from "react";
-import { GetPomoWeekReport, GetPomos } from "../../../wailsjs/go/backend/App";
+import { GetPomos } from "../../../wailsjs/go/backend/App";
 import { model } from "../../../wailsjs/go/models";
 import Digit from "../Digit";
 import { TimerLabel } from "../../data/TimerLabel";
-import { BarChart } from "@mui/x-charts/BarChart";
-import { AxisConfig, BarSeriesType } from "@mui/x-charts";
-import { MakeOptional } from "@mui/x-charts/models/helpers";
-import { getWeekLabels } from "../../util/Utils";
 import TimeChart from "./TimeChart";
 
 export default function ReportModal({
@@ -157,7 +144,6 @@ export default function ReportModal({
   );
 }
 
-const valueFormatter = (value: number | null) => `${value}mm`;
 const StyledPaper = styled(Paper)<PaperProps>(({ theme }) => ({
   height: 72,
   padding: 8,
