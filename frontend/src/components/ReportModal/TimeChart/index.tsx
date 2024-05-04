@@ -27,7 +27,7 @@ import {
   getLabelsByCalendarUnit,
 } from "../../../util/Utils";
 import { CalendarUnit } from "../../../data/CalendarUnit";
-import { model } from "../../../../wailsjs/go/models";
+import { store } from "../../../../wailsjs/go/models";
 import { addDays, addMonths, addYears } from "date-fns";
 import { formatISO, parseISO, getWeek, getMonth, parse } from "date-fns";
 
@@ -240,11 +240,11 @@ export default function TimeChart({ isOpen }: { isOpen: boolean }) {
 
 interface ResponseByDate {
   [date: string]: {
-    [label: string]: model.SessionDbRow;
+    [label: string]: store.SessionDbRow;
   };
 }
 
-interface PomoReport extends model.SessionDbRow {
+interface PomoReport extends store.SessionDbRow {
   week?: number;
   month?: number;
 }

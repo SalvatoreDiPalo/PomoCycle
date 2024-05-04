@@ -1,8 +1,7 @@
-package model
+package store
 
 import (
 	"context"
-	"database/sql"
 )
 
 type Session struct {
@@ -27,13 +26,13 @@ type SessionDbRowYear struct {
 	SessionDbRow
 }
 
-func (a *Session) AddSession(db *sql.DB, session *Session) (int64, error) {
-	result, err := db.ExecContext(
+func (s *Store) AddSession(create *Session) (int64, error) {
+	result, err := s.db.ExecContext(
 		context.Background(),
-		`INSERT INTO sessions (stage, total_seconds, "timestamp", seconds_left) VALUES(?, ?, ?, ?);`, session.Stage, session.TotalSeconds, session.Timestamp, session.SecondsLeft,
+		`INSERT INTO sessions (stage, total_seconds, "timestamp", seconds_left) VALUES(?, ?, ?, ?);`, create.Stage, create.TotalSeconds, create.Timestamp, create.SecondsLeft,
 	)
 	if err != nil {
-		println("Error adding session", session, err)
+		println("Error adding session", create, err)
 		return 0, err
 	}
 	id, err := result.LastInsertId()
@@ -44,9 +43,9 @@ func (a *Session) AddSession(db *sql.DB, session *Session) (int64, error) {
 	return id, nil
 }
 
-func (a *Session) GetSessionsByStage(db *sql.DB, stage string) ([]SessionDbRow, error) {
+func (s *Store) GetSessionsByStage(stage string) ([]SessionDbRow, error) {
 	var sessions []SessionDbRow
-	rows, err := db.QueryContext(
+	rows, err := s.db.QueryContext(
 		context.Background(),
 		`SELECT * FROM sessions WHERE stage = ? ORDER BY "timestamp";`, stage,
 	)
@@ -64,8 +63,8 @@ func (a *Session) GetSessionsByStage(db *sql.DB, stage string) ([]SessionDbRow, 
 	return sessions, err
 }
 
-func (a *Session) UpdateSecondsLeft(db *sql.DB, ID int64, seconds_left int) (bool, error) {
-	result, err := db.ExecContext(
+func (s *Store) UpdateSecondsLeft(ID int64, seconds_left int) (bool, error) {
+	result, err := s.db.ExecContext(
 		context.Background(),
 		`UPDATE sessions SET seconds_left=? WHERE id=?;`, seconds_left, ID,
 	)
@@ -81,10 +80,10 @@ func (a *Session) UpdateSecondsLeft(db *sql.DB, ID int64, seconds_left int) (boo
 	return rowsAffected > 0, nil
 }
 
-func (a *Session) GetSessionWeekReport(db *sql.DB, date string) ([]SessionDbRow, error) {
+func (s *Store) GetSessionWeekReport(date string) ([]SessionDbRow, error) {
 	println("Date", date)
 	var sessions []SessionDbRow
-	rows, err := db.QueryContext(
+	rows, err := s.db.QueryContext(
 		context.Background(),
 		`WITH date_stage AS (
 			SELECT *
@@ -117,10 +116,10 @@ func (a *Session) GetSessionWeekReport(db *sql.DB, date string) ([]SessionDbRow,
 	return sessions, err
 }
 
-func (a *Session) GetSessionMonthReport(db *sql.DB, date string) ([]SessionDbRowMonth, error) {
+func (s *Store) GetSessionMonthReport(date string) ([]SessionDbRowMonth, error) {
 	println("Date", date)
 	var sessions []SessionDbRowMonth
-	rows, err := db.QueryContext(
+	rows, err := s.db.QueryContext(
 		context.Background(),
 		`WITH date_stage AS (
 			SELECT *
@@ -153,10 +152,10 @@ func (a *Session) GetSessionMonthReport(db *sql.DB, date string) ([]SessionDbRow
 	return sessions, err
 }
 
-func (a *Session) GetSessionYearReport(db *sql.DB, date string) ([]SessionDbRowYear, error) {
+func (s *Store) GetSessionYearReport(date string) ([]SessionDbRowYear, error) {
 	println("Date", date)
 	var sessions []SessionDbRowYear
-	rows, err := db.QueryContext(
+	rows, err := s.db.QueryContext(
 		context.Background(),
 		`WITH date_stage AS (
 			SELECT *
@@ -189,9 +188,9 @@ func (a *Session) GetSessionYearReport(db *sql.DB, date string) ([]SessionDbRowY
 	return sessions, err
 }
 
-func (a *Session) GetSessionByID(db *sql.DB, id int64) (SessionDbRow, error) {
+func (s *Store) GetSessionByID(id int64) (SessionDbRow, error) {
 	var session SessionDbRow
-	row := db.QueryRowContext(
+	row := s.db.QueryRowContext(
 		context.Background(),
 		`SELECT * FROM sessions WHERE id=?`, id,
 	)

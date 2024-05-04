@@ -1,8 +1,7 @@
-package model
+package store
 
 import (
 	"context"
-	"database/sql"
 )
 
 type Activity struct {
@@ -16,8 +15,8 @@ type ActivityDbRow struct {
 	Activity
 }
 
-func (a *Activity) AddActivity(db *sql.DB, activity *Activity) (int64, error) {
-	result, err := db.ExecContext(
+func (s *Store) AddActivity(activity *Activity) (int64, error) {
+	result, err := s.db.ExecContext(
 		context.Background(),
 		`INSERT INTO activities (operation, "timestamp", id_session) VALUES(?, ?, ?);`, activity.Operation, activity.Timestamp, activity.IdSession,
 	)

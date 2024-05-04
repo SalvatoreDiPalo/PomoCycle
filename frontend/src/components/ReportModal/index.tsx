@@ -19,7 +19,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import { useEffect, useState } from "react";
 import { GetPomos } from "../../../wailsjs/go/backend/App";
-import { model } from "../../../wailsjs/go/models";
+import { store } from "../../../wailsjs/go/models";
 import Digit from "../Digit";
 import { TimerLabel } from "../../data/TimerLabel";
 import TimeChart from "./TimeChart";
@@ -46,9 +46,9 @@ export default function ReportModal({
         let secondsFocussed = 0;
         let streak = 0;
         const totalDays = response.filter(
-          (pomo: model.SessionDbRow, i: number, self: model.SessionDbRow[]) =>
+          (pomo: store.SessionDbRow, i: number, self: store.SessionDbRow[]) =>
             self.findIndex(
-              (d: model.SessionDbRow) =>
+              (d: store.SessionDbRow) =>
                 new Date(d.timestamp).setUTCHours(0, 0, 0, 0) ===
                 new Date(pomo.timestamp).setUTCHours(0, 0, 0, 0)
             ) === i
@@ -56,7 +56,7 @@ export default function ReportModal({
 
         const today = new Date();
         today.setUTCHours(0, 0, 0, 0);
-        response.reverse().forEach((pomo: model.SessionDbRow) => {
+        response.reverse().forEach((pomo: store.SessionDbRow) => {
           secondsFocussed += pomo.total_seconds - pomo.seconds_left;
           const pomoTimestamp = new Date(pomo.timestamp);
           pomoTimestamp.setUTCHours(0, 0, 0, 0);

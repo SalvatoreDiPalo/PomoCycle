@@ -17,7 +17,7 @@ export namespace backend {
 
 }
 
-export namespace model {
+export namespace store {
 	
 	export class Activity {
 	    operation: number;

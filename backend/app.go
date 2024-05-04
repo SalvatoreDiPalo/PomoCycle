@@ -2,19 +2,14 @@ package backend
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"pomodoro/backend/model"
-
-	"github.com/adrg/xdg"
-	_ "modernc.org/sqlite"
+	"pomodoro/backend/store"
 )
 
 // App struct
 type App struct {
-	ctx    context.Context
-	db     *sql.DB
-	dbPath string
+	ctx   context.Context
+	Store *store.Store
 }
 
 type UpdateSessionSecondsLeft struct {
@@ -48,112 +43,60 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
-	a.dbPath = NewDbStore()
-
-	var err error
-	a.db, err = sql.Open("sqlite", a.dbPath)
-	if err != nil {
-		println("Error opening database:", err.Error())
-	}
-	//TODO check if table already exist
-	_, err = a.db.ExecContext(
-		context.Background(),
-		`CREATE TABLE if not exists sessions (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			stage TEXT NOT NULL,
-			total_seconds INTEGER NOT NULL,
-			"timestamp" TEXT NOT NULL,
-			seconds_left INTEGER
-		);
-		CREATE TABLE if not exists activities (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			operation INTEGER NOT NULL,
-			"timestamp" TEXT NOT NULL,
-			id_session INTEGER NOT NULL,
-			CONSTRAINT activities_FK FOREIGN KEY (id_session) REFERENCES sessions(id)
-		);`,
-	)
-	if err != nil {
-		println("Error:", err.Error())
-	}
+	a.Store = store.New()
 }
 
 func (a *App) shutdown(ctx context.Context) {
-	a.db.Close()
+	a.Store.Close()
 }
 
-func (a *App) StartPomo(addPomo model.Session) (int64, error) {
-	s := model.Session{
-		Stage:        addPomo.Stage,
-		TotalSeconds: addPomo.TotalSeconds,
-		Timestamp:    addPomo.Timestamp,
-		SecondsLeft:  addPomo.SecondsLeft,
-	}
-	sessionId, err := s.AddSession(a.db, &s)
+func (a *App) StartPomo(addPomo store.Session) (int64, error) {
+	sessionId, err := a.Store.AddSession(&addPomo)
 	if err != nil {
 		return 0, err
 	}
-	activity := model.Activity{
+	a.Store.AddActivity(&store.Activity{
 		Operation: int(START),
-		Timestamp: s.Timestamp,
+		Timestamp: addPomo.Timestamp,
 		IdSession: sessionId,
-	}
-	activity.AddActivity(a.db, &activity)
+	})
 	return sessionId, err
 }
 
-func (a *App) GetPomos(stage string) ([]model.SessionDbRow, error) {
-	s := model.Session{}
-	return s.GetSessionsByStage(a.db, stage)
+func (a *App) GetPomos(stage string) ([]store.SessionDbRow, error) {
+	return a.Store.GetSessionsByStage(stage)
 }
 
-func (a *App) GetPomoWeekReport(date string) ([]model.SessionDbRow, error) {
-	s := model.Session{}
-	return s.GetSessionWeekReport(a.db, date)
+func (a *App) GetPomoWeekReport(date string) ([]store.SessionDbRow, error) {
+	return a.Store.GetSessionWeekReport(date)
 }
 
-func (a *App) GetPomoMonthReport(date string) ([]model.SessionDbRowMonth, error) {
-	s := model.Session{}
-	return s.GetSessionMonthReport(a.db, date)
+func (a *App) GetPomoMonthReport(date string) ([]store.SessionDbRowMonth, error) {
+	return a.Store.GetSessionMonthReport(date)
 }
 
-func (a *App) GetPomoYearReport(date string) ([]model.SessionDbRowYear, error) {
-	s := model.Session{}
-	return s.GetSessionYearReport(a.db, date)
+func (a *App) GetPomoYearReport(date string) ([]store.SessionDbRowYear, error) {
+	return a.Store.GetSessionYearReport(date)
 }
 
-func (a *App) AddActivityFromPomo(addActivity model.Activity) (int64, error) {
-	s := model.SessionDbRow{ID: addActivity.IdSession}
-	_, err := s.GetSessionByID(a.db, addActivity.IdSession)
+func (a *App) AddActivityFromPomo(addActivity store.Activity) (int64, error) {
+	_, err := a.Store.GetSessionByID(addActivity.IdSession)
 	if err != nil {
 		return addActivity.IdSession, err
 	}
-	activity := model.Activity{
+	activityId, err := a.Store.AddActivity(&store.Activity{
 		Operation: addActivity.Operation,
 		Timestamp: addActivity.Timestamp,
 		IdSession: addActivity.IdSession,
-	}
-	activityId, err := activity.AddActivity(a.db, &activity)
+	})
 	return activityId, err
 }
 
 func (a *App) UpdatePomoSecondsLeft(updateSessionSecondsLeft UpdateSessionSecondsLeft) (bool, error) {
-	s := model.Session{
-		SecondsLeft: updateSessionSecondsLeft.SecondsLeft,
-	}
-	return s.UpdateSecondsLeft(a.db, updateSessionSecondsLeft.ID, updateSessionSecondsLeft.SecondsLeft)
+	return a.Store.UpdateSecondsLeft(updateSessionSecondsLeft.ID, updateSessionSecondsLeft.SecondsLeft)
 }
 
 // Greet returns a greeting for the given name
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
-}
-
-func NewDbStore() string {
-	dbFilePath, err := xdg.ConfigFile("pomodoro-cycle/pomo.db")
-	if err != nil {
-		println("Could not resolve path for db file", err)
-	}
-
-	return dbFilePath
 }
