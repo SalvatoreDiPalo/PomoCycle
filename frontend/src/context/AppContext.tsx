@@ -1,6 +1,7 @@
-import { ThemeProvider, createTheme } from "@mui/material";
 import React, { ReactNode, createContext, useEffect, useState } from "react";
 import { AlarmSound } from "../data/AlarmSound";
+import createTheme from "@mui/material/styles/createTheme";
+import ThemeProvider from "@mui/material/styles/ThemeProvider";
 
 export interface AppState {
   focusTime: number;

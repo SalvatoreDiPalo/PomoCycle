@@ -60,11 +60,6 @@ export default function ThemeSwitch() {
   const theme = useTheme();
   const { updateTheme } = useContext(AppContext)!;
 
-  const handleFullWidthChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    updateTheme();
-  };
   return (
     <Box>
       <Typography variant="h5" gutterBottom align="left">
@@ -83,7 +78,7 @@ export default function ThemeSwitch() {
             <MaterialUISwitch
               sx={{ m: 1 }}
               defaultChecked={theme.palette.mode === "dark"}
-              onChange={handleFullWidthChange}
+              onChange={updateTheme}
             />
           }
           label="Appearance:"

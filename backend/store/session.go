@@ -26,6 +26,21 @@ type SessionDbRowYear struct {
 	SessionDbRow
 }
 
+const InitQueryReport string = `
+WITH date_stage AS (
+	SELECT *
+	FROM (SELECT DISTINCT date("timestamp") as date FROM sessions),
+		(values ('FOCUS TIME'),('SHORT BREAK'),('LONG BREAK'))
+),
+default_values AS (
+	SELECT id, stage, total_seconds, "timestamp", seconds_left
+	FROM sessions
+	UNION ALL
+	SELECT -1, column1, 0, date, 0
+	FROM date_stage
+)
+`
+
 func (s *Store) AddSession(create *Session) (int64, error) {
 	result, err := s.db.ExecContext(
 		context.Background(),
@@ -80,112 +95,73 @@ func (s *Store) UpdateSecondsLeft(ID int64, seconds_left int) (bool, error) {
 	return rowsAffected > 0, nil
 }
 
-func (s *Store) GetSessionWeekReport(date string) ([]SessionDbRow, error) {
-	println("Date", date)
-	var sessions []SessionDbRow
-	rows, err := s.db.QueryContext(
-		context.Background(),
-		`WITH date_stage AS (
-			SELECT *
-			FROM (SELECT DISTINCT date("timestamp") as date FROM sessions),
-				 (values ('FOCUS TIME'),('SHORT BREAK'),('LONG BREAK'))
-		  ),
-		  default_values AS (
-			SELECT id, stage, total_seconds, "timestamp", seconds_left
-			FROM sessions
-			UNION ALL
-			SELECT -1, column1, 0, date, 0
-			FROM date_stage
-		  )
-		  SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0)
-		  FROM default_values
-		  WHERE strftime('%W %Y', "timestamp") = strftime('%W %Y', ?)
-		  GROUP BY date("timestamp"), stage;`, date,
-	)
+func (s *Store) GetWeekReport(date string) ([]SessionDbRow, error) {
+	const query = InitQueryReport + `
+		SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0)
+		FROM default_values
+		WHERE strftime('%W %Y', "timestamp") = strftime('%W %Y', ?)
+		GROUP BY date("timestamp"), stage;
+	`
+	rows, err := s.db.QueryContext(context.Background(), query, date)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+	var weekSessions []SessionDbRow
 	for rows.Next() {
 		var session SessionDbRow
 		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft); err != nil {
 			return nil, err
 		}
-		sessions = append(sessions, session)
+		weekSessions = append(weekSessions, session)
 	}
-	return sessions, err
+	return weekSessions, nil
 }
 
-func (s *Store) GetSessionMonthReport(date string) ([]SessionDbRowMonth, error) {
-	println("Date", date)
-	var sessions []SessionDbRowMonth
-	rows, err := s.db.QueryContext(
-		context.Background(),
-		`WITH date_stage AS (
-			SELECT *
-			FROM (SELECT DISTINCT date("timestamp") as date FROM sessions),
-				 (values ('FOCUS TIME'),('SHORT BREAK'),('LONG BREAK'))
-		  ),
-		  default_values AS (
-			SELECT id, stage, total_seconds, "timestamp", seconds_left
-			FROM sessions
-			UNION ALL
-			SELECT -1, column1, 0, date, 0
-			FROM date_stage
-		  )
-		  SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0), strftime('%W', "timestamp") as byWeek
-		  FROM default_values
-		  WHERE strftime('%m %Y', "timestamp") = strftime('%m %Y', ?)
-		  GROUP BY byWeek, stage;`, date,
-	)
+func (s *Store) GetMonthReport(date string) ([]SessionDbRowMonth, error) {
+	const query = InitQueryReport + `
+		SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0), strftime('%W', "timestamp") as byWeek
+		FROM default_values
+		WHERE strftime('%m %Y', "timestamp") = strftime('%m %Y', ?)
+		GROUP BY byWeek, stage;
+	`
+	rows, err := s.db.QueryContext(context.Background(), query, date)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+	var monthSessions []SessionDbRowMonth
 	for rows.Next() {
 		var session SessionDbRowMonth
 		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft, &session.Week); err != nil {
 			return nil, err
 		}
-		sessions = append(sessions, session)
+		monthSessions = append(monthSessions, session)
 	}
-	return sessions, err
+	return monthSessions, nil
 }
 
-func (s *Store) GetSessionYearReport(date string) ([]SessionDbRowYear, error) {
-	println("Date", date)
-	var sessions []SessionDbRowYear
-	rows, err := s.db.QueryContext(
-		context.Background(),
-		`WITH date_stage AS (
-			SELECT *
-			FROM (SELECT DISTINCT date("timestamp") as date FROM sessions),
-				 (values ('FOCUS TIME'),('SHORT BREAK'),('LONG BREAK'))
-		  ),
-		  default_values AS (
-			SELECT id, stage, total_seconds, "timestamp", seconds_left
-			FROM sessions
-			UNION ALL
-			SELECT -1, column1, 0, date, 0
-			FROM date_stage
-		  )
-		  SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0), strftime('%m', "timestamp") as byMonth
-		  FROM default_values
-		  WHERE strftime('%Y', "timestamp") = strftime('%Y', ?)
-		  GROUP BY byMonth, stage;`, date,
-	)
+func (s *Store) GetYearReport(date string) ([]SessionDbRowYear, error) {
+	const query = InitQueryReport + `
+		SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0), strftime('%m', "timestamp") as byMonth
+		FROM default_values
+		WHERE strftime('%Y', "timestamp") = strftime('%Y', ?)
+		GROUP BY byMonth, stage;
+	`
+	rows, err := s.db.QueryContext(context.Background(), query, date)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+	var yearSessions []SessionDbRowYear
 	for rows.Next() {
 		var session SessionDbRowYear
 		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft, &session.Month); err != nil {
 			return nil, err
 		}
-		sessions = append(sessions, session)
+		yearSessions = append(yearSessions, session)
 	}
-	return sessions, err
+	return yearSessions, nil
 }
 
 func (s *Store) GetSessionByID(id int64) (SessionDbRow, error) {

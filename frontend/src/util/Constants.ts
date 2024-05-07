@@ -11,5 +11,4 @@ export const audioPaths: AudioPaths = {
   [AlarmSound.DOUBLE_BELL]: doubleBell,
   [AlarmSound.SINGLE_BELL]: doubleBell,
   [AlarmSound.BEEP]: doubleBell,
-  // Aggiungi altri percorsi audio come necessario
 };

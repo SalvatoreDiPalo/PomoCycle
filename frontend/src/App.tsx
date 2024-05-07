@@ -1,4 +1,4 @@
-import { AppBar, Box, CssBaseline, IconButton, Toolbar } from "@mui/material";
+import { AppBar, CssBaseline, Box, IconButton, Toolbar } from "@mui/material";
 import HomeScreen from "./pages/Home";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import SettingsIcon from "@mui/icons-material/Settings";

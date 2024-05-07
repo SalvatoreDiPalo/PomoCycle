@@ -1,16 +1,4 @@
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-} from "@mui/material";
-import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
-import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import { Grid, SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import {
   GetPomoMonthReport,
@@ -30,6 +18,8 @@ import { CalendarUnit } from "../../../data/CalendarUnit";
 import { store } from "../../../../wailsjs/go/models";
 import { addDays, addMonths, addYears } from "date-fns";
 import { formatISO, parseISO, getWeek, getMonth, parse } from "date-fns";
+import TimeSelector from "./TimeSelector";
+import UnitSelector from "./UnitSelector";
 
 export default function TimeChart({ isOpen }: { isOpen: boolean }) {
   const [calendarUnit, setCalendarUnit] = useState<string>(CalendarUnit.WEEK);
@@ -67,15 +57,16 @@ export default function TimeChart({ isOpen }: { isOpen: boolean }) {
         getChartBarByActivity();
       let reportPromise: Promise<PomoReport[]>;
 
+      const formattedDate = formatISO(chosenPeriod.date);
       switch (calendarUnit as CalendarUnit) {
         case CalendarUnit.WEEK:
-          reportPromise = GetPomoWeekReport(formatISO(chosenPeriod.date));
+          reportPromise = GetPomoWeekReport(formattedDate);
           break;
         case CalendarUnit.MONTH:
-          reportPromise = GetPomoMonthReport(formatISO(chosenPeriod.date));
+          reportPromise = GetPomoMonthReport(formattedDate);
           break;
         case CalendarUnit.YEAR:
-          reportPromise = GetPomoYearReport(formatISO(chosenPeriod.date));
+          reportPromise = GetPomoYearReport(formattedDate);
           break;
         default:
           reportPromise = Promise.reject(new Error("Invalid calendar unit"));
@@ -179,46 +170,16 @@ export default function TimeChart({ isOpen }: { isOpen: boolean }) {
     });
   };
 
-  const previousPeriod = () => {
-    changePeriod(-1);
-  };
-
-  const addPeriod = () => {
-    changePeriod(1);
-  };
-
   return (
     <>
       <Grid item xs={12} marginTop={2}>
-        <Box>
-          <FormControl fullWidth>
-            <InputLabel id="demo-simple-select-label">Calendar Unit</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={calendarUnit}
-              label="Calendar Unit"
-              onChange={handleCalendarUnitChange}
-            >
-              <MenuItem value={CalendarUnit.WEEK}>{CalendarUnit.WEEK}</MenuItem>
-              <MenuItem value={CalendarUnit.MONTH}>
-                {CalendarUnit.MONTH}
-              </MenuItem>
-              <MenuItem value={CalendarUnit.YEAR}>{CalendarUnit.YEAR}</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+        <UnitSelector
+          unit={calendarUnit}
+          handleCalendarUnitChange={handleCalendarUnitChange}
+        />
       </Grid>
       <Grid item xs={12} marginTop={2}>
-        <ButtonGroup variant="contained" aria-label="Basic button group">
-          <Button onClick={previousPeriod}>
-            <ArrowLeftIcon />
-          </Button>
-          <Button disabled>{chosenPeriod.label}</Button>
-          <Button onClick={addPeriod}>
-            <ArrowRightIcon />
-          </Button>
-        </ButtonGroup>
+        <TimeSelector label={chosenPeriod.label} changePeriod={changePeriod} />
       </Grid>
       <Grid item xs={12} marginTop={2}>
         <BarChart

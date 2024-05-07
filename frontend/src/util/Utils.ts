@@ -131,6 +131,12 @@ export const getDigit = (value: number) => {
   return { leftDigit, rightDigit };
 };
 
+export const getDoubleDigit = (hours: number, minutes: number) => {
+  const minutesDigits = getDigit(minutes);
+  const hoursDigits = getDigit(hours);
+  return `${hoursDigits.leftDigit}${hoursDigits.rightDigit}:${minutesDigits.leftDigit}${minutesDigits.rightDigit}`;
+};
+
 const getBarTime = (value: number) => {
   const minutes = Math.floor(((value * 3600) % 3600) / 60);
   const minutesDigits = getDigit(minutes);

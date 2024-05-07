@@ -7,7 +7,7 @@ import {
   SelectChangeEvent,
   Typography,
 } from "@mui/material";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { AlarmSound } from "../../../data/AlarmSound";
 import { AppContext } from "../../../context/AppContext";
 

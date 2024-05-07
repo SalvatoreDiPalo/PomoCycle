@@ -1,17 +1,10 @@
 import {
-  Box,
-  BoxProps,
   Dialog,
   DialogContent,
   DialogTitle,
-  Divider,
   Grid,
   IconButton,
-  Paper,
-  PaperProps,
-  Stack,
   Typography,
-  styled,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ScheduleIcon from "@mui/icons-material/Schedule";
@@ -20,9 +13,11 @@ import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import { useEffect, useState } from "react";
 import { GetPomos } from "../../../wailsjs/go/backend/App";
 import { store } from "../../../wailsjs/go/models";
-import Digit from "../Digit";
 import { TimerLabel } from "../../data/TimerLabel";
 import TimeChart from "./TimeChart";
+import StatusCard from "./StatusCard";
+import { getDoubleDigit } from "../../util/Utils";
+import { formatISO, parseISO } from "date-fns";
 
 export default function ReportModal({
   isOpen,
@@ -31,49 +26,48 @@ export default function ReportModal({
   isOpen: boolean;
   handleClose: () => void;
 }) {
-  const [timeFocussed, setTimeFocussed] = useState({
-    minutes: 0,
-    hours: 0,
-  });
+  const [timeFocussed, setTimeFocussed] = useState("00:00");
   const [dayStreak, setDayStreak] = useState<number>(0);
   const [daysAccessed, setDaysAccessed] = useState<number>(0);
 
   useEffect(() => {
     if (!isOpen) return;
-    GetPomos(TimerLabel.FOCUS_TIME)
-      .then((response) => {
+    const fetchData = async () => {
+      try {
+        const response = await GetPomos(TimerLabel.FOCUS_TIME);
         console.log("Pomos ", response);
+
         let secondsFocussed = 0;
         let streak = 0;
-        const totalDays = response.filter(
-          (pomo: store.SessionDbRow, i: number, self: store.SessionDbRow[]) =>
-            self.findIndex(
-              (d: store.SessionDbRow) =>
-                new Date(d.timestamp).setUTCHours(0, 0, 0, 0) ===
-                new Date(pomo.timestamp).setUTCHours(0, 0, 0, 0)
-            ) === i
-        ).length;
+        const uniqueDays = new Set<string>();
 
         const today = new Date();
         today.setUTCHours(0, 0, 0, 0);
+
         response.reverse().forEach((pomo: store.SessionDbRow) => {
-          secondsFocussed += pomo.total_seconds - pomo.seconds_left;
-          const pomoTimestamp = new Date(pomo.timestamp);
-          pomoTimestamp.setUTCHours(0, 0, 0, 0);
+          const pomoTimestamp = parseISO(pomo.timestamp);
+          const dateKey = formatISO(pomoTimestamp, { representation: "date" });
+          uniqueDays.add(dateKey);
+
           if (today.getTime() - pomoTimestamp.getTime() === streak * 86400000) {
             streak++;
           }
+
+          secondsFocussed += pomo.total_seconds - pomo.seconds_left;
         });
-        setTimeFocussed({
-          minutes: Math.floor((secondsFocussed % 3600) / 60),
-          hours: Math.floor(secondsFocussed / 3600),
-        });
+
+        const minutes = Math.floor((secondsFocussed % 3600) / 60);
+        const hours = Math.floor(secondsFocussed / 3600);
+        setTimeFocussed(getDoubleDigit(hours, minutes));
         setDayStreak(streak);
-        setDaysAccessed(totalDays);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+        setDaysAccessed(uniqueDays.size);
+      } catch (error) {
+        console.error("Errore durante il recupero dei dati:", error);
+        // Gestione dell'errore
+      }
+    };
+
+    fetchData();
   }, [isOpen]);
 
   return (
@@ -96,68 +90,29 @@ export default function ReportModal({
       <DialogContent>
         <Grid container spacing={1} rowSpacing={1}>
           <Grid item xs={6}>
-            <StyledPaper elevation={3}>
-              <BoxAsHeader>
-                <CalendarMonthIcon />
-                <Typography variant="h6">{daysAccessed}</Typography>
-              </BoxAsHeader>
-              <Typography variant="overline" component="p">
-                Days Accessed
-              </Typography>
-            </StyledPaper>
+            <StatusCard
+              Icon={CalendarMonthIcon}
+              label="Days Accessed"
+              value={daysAccessed}
+            />
           </Grid>
           <Grid item xs={6}>
-            <StyledPaper elevation={3}>
-              <BoxAsHeader>
-                <LocalFireDepartmentIcon />
-                <Typography variant="h6">{dayStreak}</Typography>
-              </BoxAsHeader>
-              <Typography variant="overline" component="p">
-                Day Streak
-              </Typography>
-            </StyledPaper>
+            <StatusCard
+              Icon={LocalFireDepartmentIcon}
+              label="Day Streak"
+              value={dayStreak}
+            />
           </Grid>
           <Grid item xs={12}>
-            <StyledPaper elevation={3}>
-              <BoxAsHeader>
-                <ScheduleIcon />
-                <Typography variant="h6">
-                  <Digit value={timeFocussed.hours} />:
-                  <Digit value={timeFocussed.minutes} />
-                </Typography>
-              </BoxAsHeader>
-              <Typography variant="overline" component="p">
-                Hour Focused
-              </Typography>
-            </StyledPaper>
+            <StatusCard
+              Icon={ScheduleIcon}
+              label="Hour Focused"
+              value={timeFocussed}
+            />
           </Grid>
           <TimeChart isOpen={isOpen} />
         </Grid>
-
-        <Stack
-          direction="column"
-          divider={<Divider orientation="horizontal" flexItem />}
-          spacing={2}
-        ></Stack>
       </DialogContent>
     </Dialog>
   );
 }
-
-const StyledPaper = styled(Paper)<PaperProps>(({ theme }) => ({
-  height: 72,
-  padding: 8,
-  backgroundColor:
-    theme.palette.mode === "light" ? "#f2f2f2" : theme.palette.background.paper,
-  "> p": {
-    textAlign: "right",
-  },
-}));
-
-const BoxAsHeader = styled(Box)<BoxProps>(({ theme }) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  "> svg": {
-    alignSelf: "center",
-  },
-}));

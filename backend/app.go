@@ -68,15 +68,15 @@ func (a *App) GetPomos(stage string) ([]store.SessionDbRow, error) {
 }
 
 func (a *App) GetPomoWeekReport(date string) ([]store.SessionDbRow, error) {
-	return a.Store.GetSessionWeekReport(date)
+	return a.Store.GetWeekReport(date)
 }
 
 func (a *App) GetPomoMonthReport(date string) ([]store.SessionDbRowMonth, error) {
-	return a.Store.GetSessionMonthReport(date)
+	return a.Store.GetMonthReport(date)
 }
 
 func (a *App) GetPomoYearReport(date string) ([]store.SessionDbRowYear, error) {
-	return a.Store.GetSessionYearReport(date)
+	return a.Store.GetYearReport(date)
 }
 
 func (a *App) AddActivityFromPomo(addActivity store.Activity) (int64, error) {
