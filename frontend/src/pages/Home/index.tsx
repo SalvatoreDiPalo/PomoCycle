@@ -10,14 +10,15 @@ import {
   StartPomo,
   UpdatePomoSecondsLeft,
 } from "../../../wailsjs/go/backend/App";
-import { LogDebug, LogError } from "../../../wailsjs/runtime/runtime";
 import { Operation } from "../../data/Operation";
 import { TIMEOUT, audioPaths } from "../../util/Constants";
 import { AddActivity, calculateTimeAndLabel } from "../../util/Utils";
 import { addSeconds, formatISO } from "date-fns";
+import { useSnackbarWithAction } from "../../util/useSnackbarWithAction";
 
 export default function HomeScreen() {
   const { appState } = useContext(AppContext)!;
+  const handleClickWithAction = useSnackbarWithAction();
   const [historyData, setHistoryData] = useState({
     sessionId: 0,
     isStarted: false,
@@ -40,16 +41,11 @@ export default function HomeScreen() {
   );
 
   const onExpire = () => {
-    LogDebug(
-      `Expired or skipped pomo [id=${historyData.sessionId}]. Seconds left: ${totalSeconds}`
-    );
     AddActivity(historyData.sessionId, Operation.FINISH, () =>
       UpdatePomoSecondsLeft({
         id: historyData.sessionId,
         seconds_left: totalSeconds,
-      }).catch((err) =>
-        LogError(`Error while updating session ${historyData.sessionId}`)
-      )
+      }).catch((err) => handleClickWithAction("Updating session failed!"))
     );
     if (audio) {
       audio.currentTime = 0;
@@ -81,11 +77,7 @@ export default function HomeScreen() {
       id: historyData.sessionId,
       seconds_left: totalSeconds,
     })
-      .catch((err) =>
-        LogError(
-          `Pause -> Error while updating session ${historyData.sessionId}`
-        )
-      )
+      .catch((err) => handleClickWithAction("Pause saving failed!"))
       .finally(() => pause());
   };
 
@@ -125,6 +117,7 @@ export default function HomeScreen() {
           sessionId,
         }));
       })
+      .catch((err) => handleClickWithAction("'Start' saving failed!"))
       .finally(() => start());
   };
 
@@ -157,6 +150,7 @@ export default function HomeScreen() {
             currentLabel: label,
           });
         })
+        .catch((err) => handleClickWithAction("'Start' saving failed!"))
         .finally(() => restart(reloadTime, isStarted));
     }, TIMEOUT);
   };

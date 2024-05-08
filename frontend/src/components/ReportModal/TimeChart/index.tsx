@@ -1,5 +1,5 @@
 import { Grid, SelectChangeEvent } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   GetPomoMonthReport,
   GetPomoWeekReport,
@@ -13,6 +13,7 @@ import {
   getChartBarByActivity,
   getLabelFromDate,
   getLabelsByCalendarUnit,
+  getTooltipLabelFromDate,
 } from "../../../util/Utils";
 import { CalendarUnit } from "../../../data/CalendarUnit";
 import { store } from "../../../../wailsjs/go/models";
@@ -29,6 +30,14 @@ export default function TimeChart({ isOpen }: { isOpen: boolean }) {
     label: getLabelFromDate(CalendarUnit.WEEK),
   });
 
+  const [chartSeries, setChartSeries] = useState<
+    MakeOptional<BarSeriesType, "type">[]
+  >([]);
+
+  const [axisConfig, setAxisConfig] = useState<
+    MakeOptional<AxisConfig, "id">[]
+  >([]);
+
   const handleCalendarUnitChange = (event: SelectChangeEvent) => {
     setCalendarUnit(event.target.value as string);
     setChosenPeriod({
@@ -37,13 +46,10 @@ export default function TimeChart({ isOpen }: { isOpen: boolean }) {
     });
   };
 
-  const [chartSeries, setChartSeries] = useState<
-    MakeOptional<BarSeriesType, "type">[]
-  >([]);
-
-  const [axisConfig, setAxisConfig] = useState<
-    MakeOptional<AxisConfig, "id">[]
-  >([]);
+  const handleTooltipValueFormatter = useCallback(
+    (date: Date) => getTooltipLabelFromDate(calendarUnit as CalendarUnit, date),
+    [calendarUnit]
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -140,7 +146,13 @@ export default function TimeChart({ isOpen }: { isOpen: boolean }) {
       } catch (error) {
         console.error(error);
       } finally {
-        setAxisConfig([{ scaleType: "band", data: labels }]);
+        setAxisConfig([
+          {
+            scaleType: "band",
+            data: labels,
+            valueFormatter: handleTooltipValueFormatter,
+          },
+        ]);
         setChartSeries(objects);
       }
     };

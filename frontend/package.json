@@ -16,6 +16,7 @@
     "@mui/material": "^5.15.15",
     "@mui/x-charts": "^7.3.0",
     "date-fns": "^3.6.0",
+    "notistack": "^3.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-timer-hook": "^3.0.7"

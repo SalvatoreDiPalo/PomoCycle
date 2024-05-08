@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"pomodoro/backend/store"
+
+	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
 // App struct
 type App struct {
-	ctx   context.Context
-	Store *store.Store
+	ctx    context.Context
+	Store  *store.Store
+	Logger logger.Logger
 }
 
 type UpdateSessionSecondsLeft struct {
@@ -35,18 +38,20 @@ const (
 )
 
 // NewApp creates a new App application struct
-func NewApp() *App {
-	return &App{}
+func NewApp(logger logger.Logger) *App {
+	return &App{
+		Logger: logger,
+	}
 }
 
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
-	a.Store = store.New()
+	a.Store = store.New(ctx)
 }
 
-func (a *App) shutdown(ctx context.Context) {
+func (a *App) Shutdown(ctx context.Context) {
 	a.Store.Close()
 }
 

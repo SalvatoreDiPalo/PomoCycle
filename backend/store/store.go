@@ -5,20 +5,22 @@ import (
 	"database/sql"
 
 	"github.com/adrg/xdg"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	_ "modernc.org/sqlite"
 )
 
 type Store struct {
-	db *sql.DB
+	db  *sql.DB
+	ctx context.Context
 }
 
-func New() *Store {
-	dbPath := newDbStore()
+func New(ctx context.Context) *Store {
+	dbPath := newDbStore(ctx)
 
 	var err error
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
-		println("Error opening database:", err.Error())
+		runtime.LogErrorf(ctx, "Error opening database: %v", err)
 	}
 	//TODO check if table already exist
 	_, err = db.ExecContext(
@@ -39,10 +41,12 @@ func New() *Store {
 		);`,
 	)
 	if err != nil {
+		runtime.LogErrorf(ctx, "Error init query: %v", err)
 		println("Error:", err.Error())
 	}
 	return &Store{
-		db: db,
+		db:  db,
+		ctx: ctx,
 	}
 }
 
@@ -50,10 +54,10 @@ func (s *Store) Close() error {
 	return s.db.Close()
 }
 
-func newDbStore() string {
+func newDbStore(ctx context.Context) string {
 	dbFilePath, err := xdg.ConfigFile("pomodoro-cycle/pomo.db")
 	if err != nil {
-		println("Could not resolve path for db file", err)
+		runtime.LogErrorf(ctx, "Could not resolve path for db file %v", err)
 	}
 
 	return dbFilePath
