@@ -14,7 +14,7 @@ import { Operation } from "../../data/Operation";
 import { TIMEOUT, audioPaths } from "../../util/Constants";
 import { AddActivity, calculateTimeAndLabel } from "../../util/Utils";
 import { addSeconds, formatISO } from "date-fns";
-import { useSnackbarWithAction } from "../../util/useSnackbarWithAction";
+import { useSnackbarWithAction } from "../../hooks/useSnackbarWithAction";
 
 export default function HomeScreen() {
   const { appState } = useContext(AppContext)!;
