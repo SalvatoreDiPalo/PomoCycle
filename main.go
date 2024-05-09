@@ -12,10 +12,14 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/linux"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
+
+//go:embed build/appicon.png
+var icon []byte
 
 func main() {
 	myLog := backend.NewFileLogger(fmt.Sprintf("info-%v.log", time.Now().Format("2006-01-02")))
@@ -24,7 +28,7 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:         "PomodoroCycle",
+		Title:         "PomoCycle",
 		Width:         438,
 		Height:        625,
 		DisableResize: true,
@@ -41,14 +45,21 @@ func main() {
 		Bind: []interface{}{
 			app,
 		},
+		Windows: &windows.Options{
+			WebviewIsTransparent: false,
+			WindowIsTranslucent:  false,
+			DisableWindowIcon:    false,
+		},
 		Mac: &mac.Options{
 			About: &mac.AboutInfo{
-				Title:   "PomodoroCycle",
+				Title:   "PomoCycle",
 				Message: "© 2024 Salvatore Di Palo",
+				Icon:    icon,
 			},
 		},
 		Linux: &linux.Options{
-			ProgramName: "PomodoroCycle",
+			ProgramName: "PomoCycle",
+			Icon:        icon,
 		},
 	})
 

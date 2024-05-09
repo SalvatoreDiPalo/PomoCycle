@@ -131,16 +131,20 @@ export default function HomeScreen() {
     setTimeout(() => {
       const reloadTime = new Date();
       reloadTime.setSeconds(reloadTime.getSeconds() + time * 60);
-
+      let sessionId = -1;
       StartPomo({
         seconds_left: time * 60,
         stage: label,
         timestamp: formatISO(new Date()),
         total_seconds: time * 60,
       })
-        .then((sessionId) => {
+        .then((addedSessionId) => {
           //TODO add dissolve audio
+          sessionId = addedSessionId;
           audio?.pause();
+        })
+        .catch((err) => handleClickWithAction("'Start' saving failed!"))
+        .finally(() => {
           setHistoryData({
             sessionId,
             isStarted,
@@ -149,9 +153,8 @@ export default function HomeScreen() {
             currentSelectedTimer: time,
             currentLabel: label,
           });
-        })
-        .catch((err) => handleClickWithAction("'Start' saving failed!"))
-        .finally(() => restart(reloadTime, isStarted));
+          restart(reloadTime, isStarted);
+        });
     }, TIMEOUT);
   };
 

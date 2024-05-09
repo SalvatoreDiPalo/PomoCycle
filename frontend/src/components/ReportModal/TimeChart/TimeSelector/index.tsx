@@ -21,11 +21,15 @@ export default function TimeSelector({
 
   return (
     <ButtonGroup variant="contained" aria-label="Previous Button">
-      <Button onClick={previousPeriod}>
+      <Button title="Reduce date" onClick={previousPeriod}>
         <ArrowLeftIcon />
       </Button>
       <Button disabled>{label}</Button>
-      <Button onClick={addPeriod} aria-label="Next Button">
+      <Button
+        title="Increase date"
+        onClick={addPeriod}
+        aria-label="Next Button"
+      >
         <ArrowRightIcon />
       </Button>
     </ButtonGroup>

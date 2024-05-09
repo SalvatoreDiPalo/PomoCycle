@@ -2,6 +2,10 @@ import React, { ReactNode, createContext, useEffect, useState } from "react";
 import { AlarmSound } from "../data/AlarmSound";
 import createTheme from "@mui/material/styles/createTheme";
 import ThemeProvider from "@mui/material/styles/ThemeProvider";
+import {
+  WindowSetDarkTheme,
+  WindowSetLightTheme,
+} from "../../wailsjs/runtime/runtime";
 
 export interface AppState {
   focusTime: number;
@@ -43,12 +47,14 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     const storedState = localStorage.getItem("appState");
     if (storedState) {
-      setAppState(JSON.parse(storedState));
+      const appState: AppState = JSON.parse(storedState);
+      updateWindowsTheme(appState);
     }
   }, []);
 
   useEffect(() => {
     localStorage.setItem("appState", JSON.stringify(appState));
+    updateWindowsTheme(appState);
   }, [appState]);
 
   const incrementTime = (field: string, value: number) => {
@@ -66,7 +72,10 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   };
 
   const resetTime = () => {
-    setAppState(DEFAULT_DATA);
+    setAppState((prevValue) => ({
+      ...prevValue,
+      ...DEFAULT_TIMER,
+    }));
   };
 
   const updateTheme = () => {
@@ -100,12 +109,24 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 };
 export default AppProvider;
 
-const DEFAULT_DATA: AppState = {
+const DEFAULT_TIMER = {
   focusTime: 25,
   shortBreakTime: 5,
   longBreakTime: 15,
   rounds: 4,
+};
+
+const DEFAULT_DATA: AppState = {
+  ...DEFAULT_TIMER,
   volume: 100,
   theme: "light",
   alarmSound: AlarmSound.DOUBLE_BELL,
 };
+
+function updateWindowsTheme(appState: AppState) {
+  if (appState.theme === "light") {
+    WindowSetLightTheme();
+  } else {
+    WindowSetDarkTheme();
+  }
+}

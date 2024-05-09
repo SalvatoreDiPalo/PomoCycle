@@ -18,7 +18,7 @@ export default function RoundCounter({
       <Typography variant="h6">
         {currentFocussedTime}/{totalRounds}
       </Typography>
-      <Button variant="text" onClick={resetTimer}>
+      <Button title="Restart timer" variant="text" onClick={resetTimer}>
         Restart
       </Button>
     </Box>

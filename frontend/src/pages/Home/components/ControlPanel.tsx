@@ -100,17 +100,24 @@ const ControlPanel = memo(
         </Box>
         {!isRunning ? (
           <IconButton
+            title="Play timer"
             aria-label="play"
             onClick={() => (!started ? startTimer() : onResume())}
           >
             <PlayCircleIcon sx={{ fontSize: 48 }} />
           </IconButton>
         ) : (
-          <IconButton aria-label="pause" onClick={onPause}>
+          <IconButton title="Pause timer" aria-label="pause" onClick={onPause}>
             <PauseCircleIcon sx={{ fontSize: 48 }} />
           </IconButton>
         )}
-        <IconButton aria-label="skip-next" onClick={onSkip} size="small">
+        <IconButton
+          title="Skip timer"
+          aria-label="skip-next"
+          onClick={onSkip}
+          disabled={!started}
+          size="small"
+        >
           <SkipNextIcon sx={{ fontSize: 32 }} />
         </IconButton>
       </Stack>

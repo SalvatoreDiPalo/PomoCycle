@@ -22,7 +22,6 @@ func New(ctx context.Context) *Store {
 	if err != nil {
 		runtime.LogErrorf(ctx, "Error opening database: %v", err)
 	}
-	//TODO check if table already exist
 	_, err = db.ExecContext(
 		context.Background(),
 		`CREATE TABLE if not exists sessions (

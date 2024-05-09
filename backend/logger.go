@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/adrg/xdg"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
@@ -21,7 +22,11 @@ func NewFileLogger(filename string) logger.Logger {
 
 // Print works like Sprintf.
 func (l *FileLogger) Print(message string) {
-	f, err := os.OpenFile(l.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	dbFilePath, err := xdg.ConfigFile("pomodoro-cycle/logs/" + l.filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	f, err := os.OpenFile(dbFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

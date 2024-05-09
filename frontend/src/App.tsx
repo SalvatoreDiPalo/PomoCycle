@@ -17,11 +17,16 @@ export default function App() {
       <AppBar position="fixed" color="primary" sx={{ top: "auto", bottom: 0 }}>
         <Toolbar>
           <Box sx={{ flexGrow: 1 }} />
-          <IconButton color="inherit" onClick={() => setReportModalOpen(true)}>
+          <IconButton
+            color="inherit"
+            title="Open Report"
+            onClick={() => setReportModalOpen(true)}
+          >
             <BarChartIcon />
           </IconButton>
           <IconButton
             color="inherit"
+            title="Open Settings"
             onClick={() => setSettingsModalOpen(true)}
           >
             <SettingsIcon />

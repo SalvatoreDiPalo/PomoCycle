@@ -21,12 +21,12 @@ export default function SettingModal({
 }) {
   return (
     <Dialog open={isOpen} onClose={handleClose} scroll="paper" fullWidth>
-      <DialogTitle>
-        <Typography variant="button">Setting</Typography>
-      </DialogTitle>
+      <DialogTitle>Setting</DialogTitle>
       <IconButton
+        title="Close"
         aria-label="close"
         onClick={handleClose}
+        size="large"
         sx={{
           position: "absolute",
           right: 8,

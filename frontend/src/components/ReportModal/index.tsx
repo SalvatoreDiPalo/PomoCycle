@@ -46,6 +46,7 @@ export default function ReportModal({
 
         response.reverse().forEach((pomo: store.SessionDbRow) => {
           const pomoTimestamp = parseISO(pomo.timestamp);
+          pomoTimestamp.setUTCHours(0, 0, 0, 0);
           const dateKey = formatISO(pomoTimestamp, { representation: "date" });
           uniqueDays.add(dateKey);
 
@@ -63,7 +64,6 @@ export default function ReportModal({
         setDaysAccessed(uniqueDays.size);
       } catch (error) {
         console.error("Errore durante il recupero dei dati:", error);
-        // Gestione dell'errore
       }
     };
 
@@ -72,12 +72,12 @@ export default function ReportModal({
 
   return (
     <Dialog open={isOpen} onClose={handleClose} scroll="paper" fullWidth>
-      <DialogTitle>
-        <Typography variant="button">Report</Typography>
-      </DialogTitle>
+      <DialogTitle>Report</DialogTitle>
       <IconButton
+        title="Close"
         aria-label="close"
         onClick={handleClose}
+        size="large"
         sx={{
           position: "absolute",
           right: 8,

@@ -110,7 +110,7 @@ export default function TimerSettings() {
             aria-labelledby="non-linear-slider"
           />
         </Box>
-        <Button variant="text" onClick={resetTime}>
+        <Button title="Reset timer settings" variant="text" onClick={resetTime}>
           Reset
         </Button>
       </Stack>
