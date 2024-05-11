@@ -189,6 +189,10 @@ export const getDoubleDigit = (hours: number, minutes: number): string => {
   return `${hoursDigits.leftDigit}${hoursDigits.rightDigit}:${minutesDigits.leftDigit}${minutesDigits.rightDigit}`;
 };
 
+export function swing(p: number) {
+  return 0.5 - Math.cos(p * Math.PI) / 2;
+}
+
 const getBarTime = (value: number): string => {
   const minutes = Math.floor(((value * 3600) % 3600) / 60);
   const minutesDigits = getDigit(minutes);

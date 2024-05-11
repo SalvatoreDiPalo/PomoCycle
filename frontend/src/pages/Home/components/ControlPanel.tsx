@@ -7,11 +7,8 @@ import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import { memo, useContext, useState } from "react";
 import "../style.css";
 import { AppContext } from "../../../context/AppContext";
-import { Operation } from "../../../data/Operation";
-import { AddActivity } from "../../../util/Utils";
 
 interface ControlPanelProps {
-  sessionId: number;
   started: boolean;
   isRunning: boolean;
   volume: number;
@@ -24,7 +21,6 @@ interface ControlPanelProps {
 
 const ControlPanel = memo(
   ({
-    sessionId,
     started,
     isRunning,
     volume,
@@ -48,14 +44,6 @@ const ControlPanel = memo(
 
     const handleMouseLeave = () => {
       setAudioSliderVisible(false);
-    };
-
-    const onPause = () => {
-      AddActivity(sessionId, Operation.PAUSE, pause);
-    };
-
-    const onResume = () => {
-      AddActivity(sessionId, Operation.PAUSE, resume);
     };
 
     const handleUpdateVolume = (value: number) => {
@@ -102,12 +90,12 @@ const ControlPanel = memo(
           <IconButton
             title="Play timer"
             aria-label="play"
-            onClick={() => (!started ? startTimer() : onResume())}
+            onClick={() => (!started ? startTimer() : resume())}
           >
             <PlayCircleIcon sx={{ fontSize: 48 }} />
           </IconButton>
         ) : (
-          <IconButton title="Pause timer" aria-label="pause" onClick={onPause}>
+          <IconButton title="Pause timer" aria-label="pause" onClick={pause}>
             <PauseCircleIcon sx={{ fontSize: 48 }} />
           </IconButton>
         )}
