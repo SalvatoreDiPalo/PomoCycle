@@ -3,8 +3,6 @@
 import {store} from '../models';
 import {backend} from '../models';
 
-export function AddActivityFromPomo(arg1:store.Activity):Promise<number>;
-
 export function GetPomoMonthReport(arg1:string):Promise<Array<store.SessionDbRowMonth>>;
 
 export function GetPomoWeekReport(arg1:string):Promise<Array<store.SessionDbRow>>;

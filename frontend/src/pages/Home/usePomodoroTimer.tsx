@@ -8,8 +8,7 @@ import { useSnackbarWithAction } from "../../hooks/useSnackbarWithAction";
 import { useTimer } from "react-timer-hook";
 import { TimerLabel } from "../../data/TimerLabel";
 import { AppContext, AppState } from "../../context/AppContext";
-import { AddActivity, calculateTimeAndLabel } from "../../util/Utils";
-import { Operation } from "../../data/Operation";
+import { calculateTimeAndLabel } from "../../util/Utils";
 import { HistoryData } from "../../data/HistoryData";
 
 function usePomodoroTimer(
@@ -91,7 +90,6 @@ function usePomodoroTimer(
   };
 
   const resumeTimer = () => {
-    //TODO add activity resume
     resume();
   };
 
@@ -100,12 +98,10 @@ function usePomodoroTimer(
   };
 
   const onExpire = () => {
-    AddActivity(sessionId, Operation.FINISH, () =>
-      UpdatePomoSecondsLeft({
-        id: sessionId,
-        seconds_left: 0,
-      }).catch((err) => handleClickWithAction("Updating session failed!"))
-    );
+    UpdatePomoSecondsLeft({
+      id: sessionId,
+      seconds_left: 0,
+    }).catch((err) => handleClickWithAction("Updating session failed!"));
     playAudio();
     const nextRound = historyData.currentRound + 1;
     if (nextRound > appState.rounds * 2) {

@@ -15,7 +15,6 @@ import {
   format,
   getYear,
 } from "date-fns";
-import { AddActivityFromPomo } from "../../wailsjs/go/backend/App";
 import { MakeOptional } from "@mui/x-charts/models/helpers";
 import { BarSeriesType } from "@mui/x-charts";
 
@@ -92,24 +91,6 @@ export const getTooltipLabelFromDate = (
       return `${format(date, "MMM")}-${getYear(date)}`;
     default:
       throw new Error("Invalid CalendarUnit");
-  }
-};
-
-export const AddActivity = async (
-  sessionId: number,
-  operation: number,
-  onSuccess: () => void
-) => {
-  try {
-    const activityId = await AddActivityFromPomo({
-      operation,
-      session_id: sessionId,
-      timestamp: formatISO(new Date()),
-    });
-    console.log("Activity id", activityId);
-    onSuccess();
-  } catch (err) {
-    console.error("Error while adding activity", err);
   }
 };
 

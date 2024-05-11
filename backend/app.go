@@ -28,15 +28,6 @@ type Pomo struct {
 	SecondsLeft  int    `json:"seconds_left"`
 }
 
-type Operation int
-
-const (
-	START  Operation = 0
-	PAUSE  Operation = 1
-	RESUME Operation = 2
-	FINISH Operation = 3
-)
-
 // NewApp creates a new App application struct
 func NewApp(logger logger.Logger) *App {
 	return &App{
@@ -60,11 +51,6 @@ func (a *App) StartPomo(addPomo store.Session) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	a.Store.AddActivity(&store.Activity{
-		Operation: int(START),
-		Timestamp: addPomo.Timestamp,
-		IdSession: sessionId,
-	})
 	return sessionId, err
 }
 
@@ -82,19 +68,6 @@ func (a *App) GetPomoMonthReport(date string) ([]store.SessionDbRowMonth, error)
 
 func (a *App) GetPomoYearReport(date string) ([]store.SessionDbRowYear, error) {
 	return a.Store.GetYearReport(date)
-}
-
-func (a *App) AddActivityFromPomo(addActivity store.Activity) (int64, error) {
-	_, err := a.Store.GetSessionByID(addActivity.IdSession)
-	if err != nil {
-		return addActivity.IdSession, err
-	}
-	activityId, err := a.Store.AddActivity(&store.Activity{
-		Operation: addActivity.Operation,
-		Timestamp: addActivity.Timestamp,
-		IdSession: addActivity.IdSession,
-	})
-	return activityId, err
 }
 
 func (a *App) UpdatePomoSecondsLeft(updateSessionSecondsLeft UpdateSessionSecondsLeft) (bool, error) {

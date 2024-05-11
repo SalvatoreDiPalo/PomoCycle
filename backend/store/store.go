@@ -30,13 +30,6 @@ func New(ctx context.Context) *Store {
 			total_seconds INTEGER NOT NULL,
 			"timestamp" TEXT NOT NULL,
 			seconds_left INTEGER
-		);
-		CREATE TABLE if not exists activities (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			operation INTEGER NOT NULL,
-			"timestamp" TEXT NOT NULL,
-			id_session INTEGER NOT NULL,
-			CONSTRAINT activities_FK FOREIGN KEY (id_session) REFERENCES sessions(id)
 		);`,
 	)
 	if err != nil {

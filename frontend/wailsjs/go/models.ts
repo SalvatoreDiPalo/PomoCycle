@@ -19,22 +19,6 @@ export namespace backend {
 
 export namespace store {
 	
-	export class Activity {
-	    operation: number;
-	    timestamp: string;
-	    session_id: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new Activity(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.operation = source["operation"];
-	        this.timestamp = source["timestamp"];
-	        this.session_id = source["session_id"];
-	    }
-	}
 	export class Session {
 	    stage: string;
 	    total_seconds: number;
