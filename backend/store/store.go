@@ -18,7 +18,7 @@ func New(ctx context.Context) *Store {
 	dbPath := newDbStore(ctx)
 
 	var err error
-	db, err := sql.Open("sqlite", dbPath)
+	db, err := sql.Open("sqlite", dbPath+"?_pragma=busy_timeout%3d50000")
 	if err != nil {
 		runtime.LogErrorf(ctx, "Error opening database: %v", err)
 	}

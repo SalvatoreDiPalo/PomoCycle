@@ -39,7 +39,7 @@ func main() {
 		BackgroundColour:   &options.RGBA{R: 0, G: 0, B: 0, A: 0},
 		Logger:             myLog,
 		LogLevel:           logger.DEBUG,
-		LogLevelProduction: logger.ERROR,
+		LogLevelProduction: logger.DEBUG,
 		OnStartup:          app.Startup,
 		OnShutdown:         app.Shutdown,
 		Bind: []interface{}{
