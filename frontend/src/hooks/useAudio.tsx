@@ -1,12 +1,14 @@
 import { useContext, useEffect, useState } from "react";
-import { audioPaths } from "../../util/Constants";
-import { AppContext } from "../../context/AppContext";
-import { AdjustVolumeProps } from "../../data/audio/AdjustVolumeProps";
+import { audioPaths } from "../util/Constants";
+import { AppContext } from "../context/AppContext";
+import { AdjustVolumeProps } from "../data/audio/AdjustVolumeProps";
+import { useSnackbarWithAction } from "./useSnackbarWithAction";
 
 function useAudio() {
   const [audio, setAudio] = useState<AudioState>();
   const [isFadingOut, setIsFadingOut] = useState<boolean>(false);
   const { appState } = useContext(AppContext)!;
+  const handleClickWithAction = useSnackbarWithAction();
 
   useEffect(() => {
     const path = audioPaths[appState.alarmSound];
@@ -20,7 +22,7 @@ function useAudio() {
   }, [appState.alarmSound, appState.volume]);
 
   const playAudio = () => {
-    if (!audio) {
+    if (!audio || appState.volume === 0) {
       return;
     }
     audio.element.currentTime = 0;
@@ -39,9 +41,7 @@ function useAudio() {
             setIsFadingOut(false);
           });
         })
-        .catch((error) => {
-          //TODO show snackbar error
-        });
+        .catch((error) => handleClickWithAction("Error playing audio"));
     }
   };
 

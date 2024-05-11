@@ -6,9 +6,9 @@ import ControlPanel from "./components/ControlPanel";
 import { TimerLabel } from "../../data/TimerLabel";
 import RoundCounter from "./components/RoundCounter";
 import { addSeconds } from "date-fns";
-import useAudio from "./useAudio";
+import useAudio from "../../hooks/useAudio";
 import { HistoryData } from "../../data/HistoryData";
-import usePomodoroTimer from "./usePomodoroTimer";
+import usePomodoroTimer from "../../hooks/usePomodoroTimer";
 
 export default function HomeScreen() {
   const { appState } = useContext(AppContext)!;
