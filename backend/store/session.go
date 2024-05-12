@@ -64,29 +64,71 @@ func (s *Store) AddSession(create *Session) (int64, error) {
 	return id, nil
 }
 
-func (s *Store) GetSessionsByStage(stage string) ([]SessionDbRow, error) {
-	runtime.LogDebugf(s.ctx, "Start searching session by stage %v", stage)
-	var sessions []SessionDbRow
-	rows, err := s.db.QueryContext(
+func (s *Store) GetDaysAccessedByStage() (uint16, error) {
+	runtime.LogDebugf(s.ctx, "Start searching days accessed")
+	var days uint16
+	row := s.db.QueryRowContext(
 		context.Background(),
-		`SELECT * FROM sessions WHERE stage = ? ORDER BY "timestamp";`, stage,
+		`SELECT count(distinct date("timestamp")) FROM sessions WHERE stage = 'FOCUS TIME';`,
 	)
+	err := row.Scan(&days)
 	if err != nil {
-		runtime.LogErrorf(s.ctx, "Error searching session by stage %v", err)
-		return nil, err
+		runtime.LogErrorf(s.ctx, "Error reading days accessed - %v", err)
+		return days, err
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var session SessionDbRow
-		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft); err != nil {
-			runtime.LogErrorf(s.ctx, "Error reading session %v - %v", session, err)
-			return nil, err
-		}
-		sessions = append(sessions, session)
-		runtime.LogDebugf(s.ctx, "Added to list %v", session)
+	runtime.LogDebugf(s.ctx, "Found days accessed = %d", days)
+	return days, nil
+}
+
+func (s *Store) GetSecondsFocussed() (uint32, error) {
+	runtime.LogDebugf(s.ctx, "Start searching seconds focussed")
+	var seconds uint32
+	row := s.db.QueryRowContext(
+		context.Background(),
+		`SELECT coalesce(sum(total_seconds - seconds_left), 0) FROM sessions WHERE stage = 'FOCUS TIME';`,
+	)
+	err := row.Scan(&seconds)
+	if err != nil {
+		runtime.LogErrorf(s.ctx, "Error reading seconds focussed - %v", err)
+		return seconds, err
 	}
-	runtime.LogDebugf(s.ctx, "Founded %d", len(sessions))
-	return sessions, err
+	runtime.LogDebugf(s.ctx, "Found seconds focussed %d", seconds)
+	return seconds, nil
+}
+
+func (s *Store) GetDaysStreak() (uint16, error) {
+	runtime.LogDebugf(s.ctx, "Start searching seconds focussed")
+	var days uint16
+	row := s.db.QueryRowContext(
+		context.Background(),
+		`with cte as (
+			select date("timestamp") as created_at
+			from sessions
+			where date("timestamp") <= date('now')
+			group by date(created_at)
+		  ),
+		  cte2 as (
+			select *, julianday(created_at) - julianday(lag(created_at) over (order by created_at)) as date_diff
+			from cte 
+		  ),
+		  cte3 as (
+			select *, SUM(CASE WHEN date_diff = 1 THEN 0 ELSE 1 END) OVER (order by created_at) AS grp 
+			from cte2
+		  )
+		  
+		select count(1) as period_length
+		from cte3
+		group by grp
+		ORDER BY created_at DESC
+		LIMIT 1;`,
+	)
+	err := row.Scan(&days)
+	if err != nil {
+		runtime.LogErrorf(s.ctx, "Error reading seconds focussed - %v", err)
+		return days, err
+	}
+	runtime.LogDebugf(s.ctx, "Found seconds focussed %d", days)
+	return days, nil
 }
 
 func (s *Store) UpdateSecondsLeft(ID int64, seconds_left int) (bool, error) {

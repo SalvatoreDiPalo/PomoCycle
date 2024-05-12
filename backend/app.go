@@ -28,6 +28,12 @@ type Pomo struct {
 	SecondsLeft  int    `json:"seconds_left"`
 }
 
+type DaysReport struct {
+	DaysAccessed    uint16 `json:"daysAccessed"`
+	SecondsFocussed uint32 `json:"secondsFocussed"`
+	DaysStreak      uint16 `json:"daysStreak"`
+}
+
 // NewApp creates a new App application struct
 func NewApp(logger logger.Logger) *App {
 	return &App{
@@ -54,8 +60,16 @@ func (a *App) StartPomo(addPomo store.Session) (int64, error) {
 	return sessionId, err
 }
 
-func (a *App) GetPomos(stage string) ([]store.SessionDbRow, error) {
-	return a.Store.GetSessionsByStage(stage)
+func (a *App) GetDaysReport() (DaysReport, error) {
+	daysAccessed, err := a.Store.GetDaysAccessedByStage()
+	daysStreak, err := a.Store.GetDaysStreak()
+	secondsFocussed, err := a.Store.GetSecondsFocussed()
+
+	return DaysReport{
+		DaysAccessed:    daysAccessed,
+		DaysStreak:      daysStreak,
+		SecondsFocussed: secondsFocussed,
+	}, err
 }
 
 func (a *App) GetPomoWeekReport(date string) ([]store.SessionDbRow, error) {

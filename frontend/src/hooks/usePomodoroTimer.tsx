@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { StartPomo, UpdatePomoSecondsLeft } from "../../wailsjs/go/backend/App";
-import { formatISO } from "date-fns";
+import { addSeconds, formatISO } from "date-fns";
 import { useSnackbarWithAction } from "./useSnackbarWithAction";
 import { useTimer } from "react-timer-hook";
 import { TimerLabel } from "../data/TimerLabel";
@@ -68,15 +68,14 @@ function usePomodoroTimer(
     label: string,
     autoStart?: boolean
   ) => {
-    const reloadTime = new Date();
-    reloadTime.setSeconds(reloadTime.getSeconds() + timing * 60);
+    const reloadTime = addSeconds(new Date(), timing * 60);
     let sessionId = -1;
     try {
       const response = await StartPomo({
-        seconds_left: timing,
+        seconds_left: timing * 60,
         stage: label,
         timestamp: formatISO(new Date()),
-        total_seconds: timing,
+        total_seconds: timing * 60,
       });
       sessionId = response;
     } catch (err) {
@@ -91,13 +90,13 @@ function usePomodoroTimer(
   };
 
   const skipTimer = () => {
-    onExpire();
+    onExpire(totalSeconds);
   };
 
-  const onExpire = () => {
+  const onExpire = (secondsLeft: number = 0) => {
     UpdatePomoSecondsLeft({
       id: sessionId,
-      seconds_left: 0,
+      seconds_left: secondsLeft,
     }).catch((err) => handleClickWithAction("Updating session failed!"));
     playAudio();
     const nextRound = historyData.currentRound + 1;

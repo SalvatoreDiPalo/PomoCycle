@@ -42,7 +42,6 @@ export const useChartData = (
 
       try {
         let response = await reportPromise;
-
         if (!response || response.length % 3 !== 0) {
           response = [];
         }

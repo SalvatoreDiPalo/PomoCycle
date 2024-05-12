@@ -4,20 +4,16 @@ import {
   DialogTitle,
   Grid,
   IconButton,
-  Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import { useEffect, useState } from "react";
-import { GetPomos } from "../../../wailsjs/go/backend/App";
-import { store } from "../../../wailsjs/go/models";
-import { TimerLabel } from "../../data/TimerLabel";
+import { GetDaysReport } from "../../../wailsjs/go/backend/App";
 import TimeChart from "./TimeChart";
 import StatusCard from "./StatusCard";
 import { getDoubleDigit } from "../../util/Utils";
-import { formatISO, parseISO } from "date-fns";
 
 export default function ReportModal({
   isOpen,
@@ -34,34 +30,14 @@ export default function ReportModal({
     if (!isOpen) return;
     const fetchData = async () => {
       try {
-        const response = await GetPomos(TimerLabel.FOCUS_TIME);
+        const response = await GetDaysReport();
         console.log("Pomos ", response);
 
-        let secondsFocussed = 0;
-        let streak = 0;
-        const uniqueDays = new Set<string>();
-
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
-
-        response.reverse().forEach((pomo: store.SessionDbRow) => {
-          const pomoTimestamp = parseISO(pomo.timestamp);
-          pomoTimestamp.setUTCHours(0, 0, 0, 0);
-          const dateKey = formatISO(pomoTimestamp, { representation: "date" });
-          uniqueDays.add(dateKey);
-
-          if (today.getTime() - pomoTimestamp.getTime() === streak * 86400000) {
-            streak++;
-          }
-
-          secondsFocussed += pomo.total_seconds - pomo.seconds_left;
-        });
-
-        const minutes = Math.floor((secondsFocussed % 3600) / 60);
-        const hours = Math.floor(secondsFocussed / 3600);
+        const minutes = Math.floor((response.secondsFocussed % 3600) / 60);
+        const hours = Math.floor(response.secondsFocussed / 3600);
         setTimeFocussed(getDoubleDigit(hours, minutes));
-        setDayStreak(streak);
-        setDaysAccessed(uniqueDays.size);
+        setDayStreak(response.daysStreak);
+        setDaysAccessed(response.daysAccessed);
       } catch (error) {
         console.error("Errore durante il recupero dei dati:", error);
       }

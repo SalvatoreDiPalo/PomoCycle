@@ -5,7 +5,6 @@ import {
   Divider,
   IconButton,
   Stack,
-  Typography,
 } from "@mui/material";
 import TimerSettings from "./TimerSettings";
 import Sound from "./Sound";

@@ -1,5 +1,21 @@
 export namespace backend {
 	
+	export class DaysReport {
+	    daysAccessed: number;
+	    secondsFocussed: number;
+	    daysStreak: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new DaysReport(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.daysAccessed = source["daysAccessed"];
+	        this.secondsFocussed = source["secondsFocussed"];
+	        this.daysStreak = source["daysStreak"];
+	    }
+	}
 	export class UpdateSessionSecondsLeft {
 	    id: number;
 	    seconds_left: number;
