@@ -3,8 +3,8 @@ name: Wails build
 on:
   push:
     tags:
-    # Match any new tag
-      - '*'
+      # Match any new tag
+      - "*"
 
 env:
   # Necessary for most environments as build failure can occur due to OOM issues
@@ -13,19 +13,19 @@ env:
 jobs:
   build:
     strategy:
-    # Failure in one platform build won't impact the others
+      # Failure in one platform build won't impact the others
       fail-fast: false
       matrix:
         build:
-          - name: 'PomoCycle'
-            platform:  'linux/amd64'
-            os: 'ubuntu-latest'
-          - name: 'PomoCycle'
-            platform:  'windows/amd64'
-            os: 'windows-latest'
-          - name: 'PomoCycle'
-            platform:  'darwin/universal'
-            os: 'macos-latest'
+          - name: "PomoCycle"
+            platform: "linux/amd64"
+            os: "ubuntu-latest"
+          - name: "PomoCycle"
+            platform: "windows/amd64"
+            os: "windows-latest"
+          - name: "PomoCycle"
+            platform: "darwin/universal"
+            os: "macos-latest"
 
     runs-on: ${{ matrix.build.os }}
     steps:
@@ -41,4 +41,11 @@ jobs:
           build-name: ${{ matrix.build.name }}
           build-platform: ${{ matrix.build.platform }}
           package: true
-          go-version: '1.21'
+          go-version: "1.21"
+
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
