@@ -4,7 +4,7 @@ import CircularProgress, {
 } from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import Digit from "../Digit";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback } from "react";
 import { TimerLabel } from "../../data/TimerLabel";
 import { Theme } from "@mui/material";
 

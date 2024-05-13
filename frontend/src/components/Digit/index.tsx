@@ -1,6 +1,7 @@
+import { getDigit } from "../../util/Utils";
+
 export default function Digit({ value }: { value: number }) {
-  const leftDigit = value >= 10 ? value.toString()[0] : "0";
-  const rightDigit = value >= 10 ? value.toString()[1] : value.toString();
+  const { leftDigit, rightDigit } = getDigit(value);
   return (
     <>
       {leftDigit}

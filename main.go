@@ -2,24 +2,38 @@ package main
 
 import (
 	"embed"
+	"fmt"
+	"pomodoro/backend"
+	"time"
 
 	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/linux"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
+//go:embed build/appicon.png
+var icon []byte
+
 func main() {
-	// Create an instance of the app structure
-	app := NewApp()
+	myLog := backend.NewFileLogger(fmt.Sprintf("info-%v.log", time.Now().Format("2006-01-02")))
+
+	configStore, err := backend.NewConfigStore(myLog, "pomodoro-cycle", "config.json")
+	app := backend.NewApp(myLog, *configStore)
+	if err != nil {
+		fmt.Printf("could not initialize the config store: %v\n", err)
+		return
+	}
 
 	// Create application with options
-	err := wails.Run(&options.App{
-		Title:         "PomodoroCycle",
+	err = wails.Run(&options.App{
+		Title:         "PomoCycle",
 		Width:         438,
 		Height:        625,
 		DisableResize: true,
@@ -27,19 +41,31 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-		OnStartup:        app.startup,
+		BackgroundColour:   &options.RGBA{R: 0, G: 0, B: 0, A: 0},
+		Logger:             myLog,
+		LogLevel:           logger.DEBUG,
+		LogLevelProduction: logger.DEBUG,
+		OnStartup:          app.Startup,
+		OnShutdown:         app.Shutdown,
 		Bind: []interface{}{
 			app,
+			configStore,
+		},
+		Windows: &windows.Options{
+			WebviewIsTransparent: false,
+			WindowIsTranslucent:  false,
+			DisableWindowIcon:    false,
 		},
 		Mac: &mac.Options{
 			About: &mac.AboutInfo{
-				Title:   "PomodoroCycle",
+				Title:   "PomoCycle",
 				Message: "© 2024 Salvatore Di Palo",
+				Icon:    icon,
 			},
 		},
 		Linux: &linux.Options{
-			ProgramName: "PomodoroCycle",
+			ProgramName: "PomoCycle",
+			Icon:        icon,
 		},
 	})
 

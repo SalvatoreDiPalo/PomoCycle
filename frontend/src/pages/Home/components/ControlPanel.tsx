@@ -4,8 +4,9 @@ import PauseCircleIcon from "@mui/icons-material/PauseCircle";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-import { memo, useState } from "react";
+import { memo, useContext, useState } from "react";
 import "../style.css";
+import { AppContext } from "../../../context/AppContext";
 
 interface ControlPanelProps {
   started: boolean;
@@ -15,7 +16,7 @@ interface ControlPanelProps {
   resume: () => void;
   pause: () => void;
   onSkip: () => void;
-  updateVolume: (value: number) => void;
+  audio: HTMLAudioElement | undefined;
 }
 
 const ControlPanel = memo(
@@ -27,10 +28,11 @@ const ControlPanel = memo(
     resume,
     pause,
     onSkip,
-    updateVolume,
+    audio,
   }: ControlPanelProps) => {
     const [isAudioSliderVisible, setAudioSliderVisible] =
       useState<boolean>(false);
+    const { updateVolume } = useContext(AppContext)!;
 
     const handleToggleVolume = () => {
       updateVolume(volume === 0 ? 100 : 0);
@@ -42,6 +44,14 @@ const ControlPanel = memo(
 
     const handleMouseLeave = () => {
       setAudioSliderVisible(false);
+    };
+
+    const handleUpdateVolume = (value: number) => {
+      if (audio) {
+        audio.volume = value / 100;
+      }
+
+      updateVolume(value);
     };
 
     return (
@@ -68,7 +78,7 @@ const ControlPanel = memo(
               aria-label="Volume"
               value={volume}
               onChange={(event: Event, newValue: number | number[]) =>
-                updateVolume(newValue as number)
+                handleUpdateVolume(newValue as number)
               }
               max={100}
               min={0}
@@ -78,17 +88,24 @@ const ControlPanel = memo(
         </Box>
         {!isRunning ? (
           <IconButton
+            title="Play timer"
             aria-label="play"
             onClick={() => (!started ? startTimer() : resume())}
           >
             <PlayCircleIcon sx={{ fontSize: 48 }} />
           </IconButton>
         ) : (
-          <IconButton aria-label="pause" onClick={pause}>
+          <IconButton title="Pause timer" aria-label="pause" onClick={pause}>
             <PauseCircleIcon sx={{ fontSize: 48 }} />
           </IconButton>
         )}
-        <IconButton aria-label="skip-next" onClick={onSkip} size="small">
+        <IconButton
+          title="Skip timer"
+          aria-label="skip-next"
+          onClick={onSkip}
+          disabled={!started}
+          size="small"
+        >
           <SkipNextIcon sx={{ fontSize: 32 }} />
         </IconButton>
       </Stack>
