@@ -22,7 +22,7 @@ func NewFileLogger(filename string) logger.Logger {
 
 // Print works like Sprintf.
 func (l *FileLogger) Print(message string) {
-	dbFilePath, err := xdg.ConfigFile("pomodoro-cycle/logs/" + l.filename)
+	dbFilePath, err := xdg.ConfigFile("pomodoro-cycle" + string(os.PathSeparator) + "logs" + string(os.PathSeparator) + l.filename)
 	if err != nil {
 		log.Fatal(err)
 	}

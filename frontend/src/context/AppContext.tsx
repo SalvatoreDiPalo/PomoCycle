@@ -6,19 +6,12 @@ import {
   WindowSetDarkTheme,
   WindowSetLightTheme,
 } from "../../wailsjs/runtime/runtime";
-
-export interface AppState {
-  focusTime: number;
-  shortBreakTime: number;
-  longBreakTime: number;
-  rounds: number;
-  volume: number;
-  theme: "light" | "dark";
-  alarmSound: AlarmSound;
-}
+import { GetConfig, SetConfig } from "../../wailsjs/go/backend/ConfigStore";
+import { backend } from "../../wailsjs/go/models";
+import { PaletteMode } from "@mui/material";
 
 interface AppContextProps {
-  appState: AppState;
+  appState: backend.AppState;
   incrementTime: (field: string, value: number) => void;
   resetTime: () => void;
   updateVolume: (value: number) => void;
@@ -29,7 +22,8 @@ interface AppContextProps {
 export const AppContext = createContext<AppContextProps | null>(null);
 
 const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [appState, setAppState] = useState<AppState>({
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [appState, setAppState] = useState<backend.AppState>({
     ...DEFAULT_DATA,
     // Initialize other state properties here
   });
@@ -38,24 +32,36 @@ const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     () =>
       createTheme({
         palette: {
-          mode: appState.theme,
+          mode: appState.theme as PaletteMode,
         },
       }),
     [appState.theme]
   );
 
   useEffect(() => {
-    const storedState = localStorage.getItem("appState");
-    if (storedState) {
-      const appState: AppState = JSON.parse(storedState);
-      updateWindowsTheme(appState);
-    }
+    const fetchConfigs = async () => {
+      const dataValue: backend.AppState = await GetConfig(appState);
+      if (dataValue) {
+        setAppState(dataValue);
+      } else {
+        console.error("Error reading config file");
+      }
+      localStorage.setItem("appState", JSON.stringify(dataValue));
+      setIsLoading(false);
+    };
+    setIsLoading(true);
+    fetchConfigs();
   }, []);
 
   useEffect(() => {
+    if (isLoading) return;
+    const updateConfigs = async () => {
+      await SetConfig(appState);
+    };
     localStorage.setItem("appState", JSON.stringify(appState));
+    updateConfigs();
     updateWindowsTheme(appState);
-  }, [appState]);
+  }, [appState, isLoading]);
 
   const incrementTime = (field: string, value: number) => {
     setAppState((prevState) => ({
@@ -116,14 +122,14 @@ const DEFAULT_TIMER = {
   rounds: 4,
 };
 
-const DEFAULT_DATA: AppState = {
+const DEFAULT_DATA: backend.AppState = {
   ...DEFAULT_TIMER,
   volume: 100,
   theme: "light",
   alarmSound: AlarmSound.DOUBLE_BELL,
 };
 
-function updateWindowsTheme(appState: AppState) {
+function updateWindowsTheme(appState: backend.AppState) {
   if (appState.theme === "light") {
     WindowSetLightTheme();
   } else {

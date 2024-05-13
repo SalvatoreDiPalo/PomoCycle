@@ -23,11 +23,16 @@ var icon []byte
 
 func main() {
 	myLog := backend.NewFileLogger(fmt.Sprintf("info-%v.log", time.Now().Format("2006-01-02")))
-	// Create an instance of the app structure
-	app := backend.NewApp(myLog)
+
+	configStore, err := backend.NewConfigStore(myLog, "pomodoro-cycle", "config.json")
+	app := backend.NewApp(myLog, *configStore)
+	if err != nil {
+		fmt.Printf("could not initialize the config store: %v\n", err)
+		return
+	}
 
 	// Create application with options
-	err := wails.Run(&options.App{
+	err = wails.Run(&options.App{
 		Title:         "PomoCycle",
 		Width:         438,
 		Height:        625,
@@ -44,6 +49,7 @@ func main() {
 		OnShutdown:         app.Shutdown,
 		Bind: []interface{}{
 			app,
+			configStore,
 		},
 		Windows: &windows.Options{
 			WebviewIsTransparent: false,

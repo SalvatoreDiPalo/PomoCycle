@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"os"
 
 	"github.com/adrg/xdg"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -47,7 +48,7 @@ func (s *Store) Close() error {
 }
 
 func newDbStore(ctx context.Context) string {
-	dbFilePath, err := xdg.ConfigFile("pomodoro-cycle/pomo.db")
+	dbFilePath, err := xdg.ConfigFile("pomodoro-cycle" + string(os.PathSeparator) + "pomo.db")
 	if err != nil {
 		runtime.LogErrorf(ctx, "Could not resolve path for db file %v", err)
 	}

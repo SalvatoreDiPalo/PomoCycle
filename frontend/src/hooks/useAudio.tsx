@@ -3,6 +3,7 @@ import { audioPaths } from "../util/Constants";
 import { AppContext } from "../context/AppContext";
 import { AdjustVolumeProps } from "../data/audio/AdjustVolumeProps";
 import { useSnackbarWithAction } from "./useSnackbarWithAction";
+import { AlarmSound } from "../data/AlarmSound";
 
 function useAudio() {
   const [audio, setAudio] = useState<AudioState>();
@@ -11,7 +12,8 @@ function useAudio() {
   const handleClickWithAction = useSnackbarWithAction();
 
   useEffect(() => {
-    const path = audioPaths[appState.alarmSound];
+    const sound = appState.alarmSound as AlarmSound;
+    const path = audioPaths[sound];
     const audioObject = new Audio(path.audio);
     audioObject.volume = appState.volume / 100;
     audioObject.load();

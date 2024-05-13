@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"strings"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -26,6 +27,17 @@ type SessionDbRowMonth struct {
 type SessionDbRowYear struct {
 	Month int `json:"month"`
 	SessionDbRow
+}
+
+type ResponseByDateInnerMap map[string]SessionDbRow
+type ResponseByDateMap map[string]ResponseByDateInnerMap
+
+type InnerMapWrapper struct {
+	InnerWrapper map[string]SessionDbRow `json:"innerWrapper"`
+}
+
+type ResponseByDate struct {
+	Item map[string]InnerMapWrapper `json:"item"`
 }
 
 const InitQueryReport string = `
@@ -152,7 +164,7 @@ func (s *Store) UpdateSecondsLeft(ID int64, seconds_left int) (bool, error) {
 	return rowsAffected > 0, nil
 }
 
-func (s *Store) GetWeekReport(date string) ([]SessionDbRow, error) {
+func (s *Store) GetWeekReport(date string) (ResponseByDate, error) {
 	runtime.LogDebugf(s.ctx, "Start searching session week report %v", date)
 	const query = InitQueryReport + `
 		SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0)
@@ -163,24 +175,31 @@ func (s *Store) GetWeekReport(date string) ([]SessionDbRow, error) {
 	rows, err := s.db.QueryContext(context.Background(), query, date)
 	if err != nil {
 		runtime.LogErrorf(s.ctx, "Error searching session week report %v", err)
-		return nil, err
+		return ResponseByDate{}, err
 	}
 	defer rows.Close()
-	var weekSessions []SessionDbRow
+	var responseByDate ResponseByDate
+	responseByDate.Item = make(map[string]InnerMapWrapper)
 	for rows.Next() {
 		var session SessionDbRow
 		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft); err != nil {
 			runtime.LogErrorf(s.ctx, "Error reading session %v - %v", session, err)
-			return nil, err
+			return ResponseByDate{}, err
 		}
-		weekSessions = append(weekSessions, session)
-		runtime.LogDebugf(s.ctx, "Added to week list %v", session)
+		key := strings.Split(session.Timestamp, "T")[0]
+		innerMap := responseByDate.Item[key]
+		if innerMap.InnerWrapper == nil {
+			innerMap.InnerWrapper = make(map[string]SessionDbRow)
+		}
+		innerMap.InnerWrapper[session.Stage] = session
+		responseByDate.Item[key] = innerMap
+		runtime.LogDebugf(s.ctx, "Added to inner %v", session)
 	}
-	runtime.LogDebugf(s.ctx, "Founded %d", len(weekSessions))
-	return weekSessions, nil
+	runtime.LogDebugf(s.ctx, "Founded %v", responseByDate)
+	return responseByDate, err
 }
 
-func (s *Store) GetMonthReport(date string) ([]SessionDbRowMonth, error) {
+func (s *Store) GetMonthReport(date string) (ResponseByDate, error) {
 	runtime.LogDebugf(s.ctx, "Start searching session month report %v", date)
 	const query = InitQueryReport + `
 		SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0), strftime('%W', "timestamp") as byWeek
@@ -191,24 +210,31 @@ func (s *Store) GetMonthReport(date string) ([]SessionDbRowMonth, error) {
 	rows, err := s.db.QueryContext(context.Background(), query, date)
 	if err != nil {
 		runtime.LogErrorf(s.ctx, "Error searching session month report %v", err)
-		return nil, err
+		return ResponseByDate{}, err
 	}
 	defer rows.Close()
-	var monthSessions []SessionDbRowMonth
+	var responseByDate ResponseByDate
+	responseByDate.Item = make(map[string]InnerMapWrapper)
 	for rows.Next() {
-		var session SessionDbRowMonth
-		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft, &session.Week); err != nil {
+		var session SessionDbRow
+		var key int
+		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft, &key); err != nil {
 			runtime.LogErrorf(s.ctx, "Error reading session %v - %v", session, err)
-			return nil, err
+			return ResponseByDate{}, err
 		}
-		monthSessions = append(monthSessions, session)
-		runtime.LogDebugf(s.ctx, "Added to month list %v", session)
+		innerMap := responseByDate.Item[string(rune(key))]
+		if innerMap.InnerWrapper == nil {
+			innerMap.InnerWrapper = make(map[string]SessionDbRow)
+		}
+		innerMap.InnerWrapper[session.Stage] = session
+		responseByDate.Item[string(rune(key))] = innerMap
+		runtime.LogDebugf(s.ctx, "Added to inner %v", session)
 	}
-	runtime.LogDebugf(s.ctx, "Founded sessions %d", len(monthSessions))
-	return monthSessions, nil
+	runtime.LogDebugf(s.ctx, "Founded %v", responseByDate)
+	return responseByDate, err
 }
 
-func (s *Store) GetYearReport(date string) ([]SessionDbRowYear, error) {
+func (s *Store) GetYearReport(date string) (ResponseByDate, error) {
 	runtime.LogDebugf(s.ctx, "Start searching session year report %v", date)
 	const query = InitQueryReport + `
 		SELECT id, stage, COALESCE(sum(total_seconds), 0), date("timestamp"), COALESCE(sum(seconds_left), 0), strftime('%m', "timestamp") as byMonth
@@ -219,20 +245,28 @@ func (s *Store) GetYearReport(date string) ([]SessionDbRowYear, error) {
 	rows, err := s.db.QueryContext(context.Background(), query, date)
 	if err != nil {
 		runtime.LogErrorf(s.ctx, "Error searching session year report %v", err)
-		return nil, err
+		return ResponseByDate{}, err
 	}
 	defer rows.Close()
-	var yearSessions []SessionDbRowYear
+	var responseByDate ResponseByDate
+	responseByDate.Item = make(map[string]InnerMapWrapper)
 	for rows.Next() {
-		var session SessionDbRowYear
-		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft, &session.Month); err != nil {
+		var session SessionDbRow
+		var key int
+		if err := rows.Scan(&session.ID, &session.Stage, &session.TotalSeconds, &session.Timestamp, &session.SecondsLeft, &key); err != nil {
 			runtime.LogErrorf(s.ctx, "Error reading session %v - %v", session, err)
-			return nil, err
+			return ResponseByDate{}, err
 		}
-		yearSessions = append(yearSessions, session)
-		runtime.LogDebugf(s.ctx, "Added to year list %v", session)
+		innerMap := responseByDate.Item[string(rune(key))]
+		if innerMap.InnerWrapper == nil {
+			innerMap.InnerWrapper = make(map[string]SessionDbRow)
+		}
+		innerMap.InnerWrapper[session.Stage] = session
+		responseByDate.Item[string(rune(key))] = innerMap
+		runtime.LogDebugf(s.ctx, "Added to inner %v", session)
 	}
-	return yearSessions, nil
+	runtime.LogDebugf(s.ctx, "Founded %v", responseByDate)
+	return responseByDate, err
 }
 
 func (s *Store) GetSessionByID(id int64) (SessionDbRow, error) {

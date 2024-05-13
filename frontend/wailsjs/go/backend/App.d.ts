@@ -5,11 +5,11 @@ import {store} from '../models';
 
 export function GetDaysReport():Promise<backend.DaysReport>;
 
-export function GetPomoMonthReport(arg1:string):Promise<Array<store.SessionDbRowMonth>>;
+export function GetPomoMonthReport(arg1:string):Promise<store.ResponseByDate>;
 
-export function GetPomoWeekReport(arg1:string):Promise<Array<store.SessionDbRow>>;
+export function GetPomoWeekReport(arg1:string):Promise<store.ResponseByDate>;
 
-export function GetPomoYearReport(arg1:string):Promise<Array<store.SessionDbRowYear>>;
+export function GetPomoYearReport(arg1:string):Promise<store.ResponseByDate>;
 
 export function Greet(arg1:string):Promise<string>;
 

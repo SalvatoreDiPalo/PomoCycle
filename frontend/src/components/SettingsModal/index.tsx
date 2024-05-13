@@ -20,7 +20,7 @@ export default function SettingModal({
 }) {
   return (
     <Dialog open={isOpen} onClose={handleClose} scroll="paper" fullWidth>
-      <DialogTitle>Setting</DialogTitle>
+      <DialogTitle>Settings</DialogTitle>
       <IconButton
         title="Close"
         aria-label="close"

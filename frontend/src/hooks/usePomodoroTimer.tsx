@@ -4,9 +4,10 @@ import { addSeconds, formatISO } from "date-fns";
 import { useSnackbarWithAction } from "./useSnackbarWithAction";
 import { useTimer } from "react-timer-hook";
 import { TimerLabel } from "../data/TimerLabel";
-import { AppContext, AppState } from "../context/AppContext";
+import { AppContext } from "../context/AppContext";
 import { calculateTimeAndLabel } from "../util/Utils";
 import { HistoryData } from "../data/HistoryData";
+import { backend } from "../../wailsjs/go/models";
 
 function usePomodoroTimer(
   initDateTime: Date,
@@ -150,7 +151,7 @@ export default usePomodoroTimer;
 
 const getNewTimingFromAppState = (
   currentLabel: TimerLabel,
-  appState: AppState
+  appState: backend.AppState
 ): number => {
   switch (currentLabel) {
     case TimerLabel.FOCUS_TIME:

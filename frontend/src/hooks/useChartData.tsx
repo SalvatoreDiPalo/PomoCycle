@@ -35,21 +35,17 @@ export const useChartData = (
       const labels = getLabelsByCalendarUnit(calendarUnit, chosenPeriodDate);
       let objects: MakeOptional<BarSeriesType, "type">[] =
         getChartBarByActivity();
-      let reportPromise: Promise<PomoReport[]> = getReportPromise(
+      let reportPromise: Promise<store.ResponseByDate> = getReportPromise(
         calendarUnit,
         chosenPeriodDate
       );
 
       try {
         let response = await reportPromise;
-        if (!response || response.length % 3 !== 0) {
-          response = [];
+        console.log("Response", response);
+        if (!response) {
+          response = {} as store.ResponseByDate;
         }
-
-        const responseLookup: ResponseByDate = buildResponseLookup(
-          response,
-          calendarUnit
-        );
 
         for (let label of labels) {
           let index = labels.indexOf(label);
@@ -69,13 +65,14 @@ export const useChartData = (
               break;
           }
 
+          //TODO fix dates
+          const innerWrapper = response.item[date];
           let focusTime =
-            responseLookup[date] && responseLookup[date][TimerLabel.FOCUS_TIME];
+            innerWrapper && innerWrapper.innerWrapper[TimerLabel.FOCUS_TIME];
           let longTime =
-            responseLookup[date] && responseLookup[date][TimerLabel.LONG_BREAK];
+            innerWrapper && innerWrapper.innerWrapper[TimerLabel.LONG_BREAK];
           let shortTime =
-            responseLookup[date] &&
-            responseLookup[date][TimerLabel.SHORT_BREAK];
+            innerWrapper && innerWrapper.innerWrapper[TimerLabel.SHORT_BREAK];
 
           objects[0].data![index] = focusTime
             ? (focusTime.total_seconds - focusTime.seconds_left) / 3600
@@ -98,6 +95,7 @@ export const useChartData = (
               getTooltipLabelFromDate(calendarUnit, date),
           },
         ]);
+        console.log("Objects", objects);
         setChartSeries(objects);
       }
     };
@@ -111,7 +109,7 @@ export const useChartData = (
 const getReportPromise = (
   calendarUnit: CalendarUnit,
   chosenPeriodDate: Date
-): Promise<store.SessionDbRow[]> => {
+): Promise<store.ResponseByDate> => {
   const formattedDate = formatISO(chosenPeriodDate);
   switch (calendarUnit) {
     case CalendarUnit.WEEK:
@@ -124,42 +122,3 @@ const getReportPromise = (
       throw new Error("Invalid calendar unit");
   }
 };
-
-const buildResponseLookup = (
-  response: PomoReport[],
-  calendarUnit: CalendarUnit
-): ResponseByDate => {
-  const responseLookup: ResponseByDate = {};
-
-  for (let item of response) {
-    let date;
-    switch (calendarUnit) {
-      case CalendarUnit.WEEK:
-        date = item.timestamp.split("T")[0];
-        break;
-      case CalendarUnit.MONTH:
-        date = item.week!;
-        break;
-      case CalendarUnit.YEAR:
-        date = item.month!;
-        break;
-    }
-
-    if (!responseLookup[date]) {
-      responseLookup[date] = {};
-    }
-    responseLookup[date][item.stage] = item;
-  }
-  return responseLookup;
-};
-
-interface ResponseByDate {
-  [date: string]: {
-    [label: string]: store.SessionDbRow;
-  };
-}
-
-interface PomoReport extends store.SessionDbRow {
-  week?: number;
-  month?: number;
-}

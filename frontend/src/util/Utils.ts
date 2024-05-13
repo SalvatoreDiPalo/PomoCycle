@@ -1,4 +1,3 @@
-import { AppState } from "../context/AppContext";
 import { CalendarUnit } from "../data/CalendarUnit";
 import { TimerLabel } from "../data/TimerLabel";
 import {
@@ -17,10 +16,11 @@ import {
 } from "date-fns";
 import { MakeOptional } from "@mui/x-charts/models/helpers";
 import { BarSeriesType } from "@mui/x-charts";
+import { backend } from "../../wailsjs/go/models";
 
 export const calculateTimeAndLabel = (
   currentRound: number,
-  appState: AppState
+  appState: backend.AppState
 ): {
   time: number;
   label: TimerLabel;

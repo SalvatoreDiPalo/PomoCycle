@@ -77,7 +77,7 @@ export default function ThemeSwitch() {
           control={
             <MaterialUISwitch
               sx={{ m: 1 }}
-              defaultChecked={theme.palette.mode === "dark"}
+              checked={theme.palette.mode === "dark"}
               onChange={updateTheme}
             />
           }

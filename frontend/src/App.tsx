@@ -3,7 +3,7 @@ import HomeScreen from "./pages/Home";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useState } from "react";
-import SettingModal from "./components/SettingModal";
+import SettingModal from "./components/SettingsModal";
 import ReportModal from "./components/ReportModal";
 
 export default function App() {

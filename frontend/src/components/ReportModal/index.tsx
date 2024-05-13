@@ -82,7 +82,7 @@ export default function ReportModal({
           <Grid item xs={12}>
             <StatusCard
               Icon={ScheduleIcon}
-              label="Hour Focused"
+              label="Hours Focused"
               value={timeFocussed}
             />
           </Grid>
