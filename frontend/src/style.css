@@ -2,6 +2,7 @@ html {
   background-color: rgba(0, 0, 0, 0);
   text-align: center;
   color: white;
+  overflow: hidden;
 }
 
 body {
